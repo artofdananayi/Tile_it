@@ -1,0 +1,158 @@
+// ====== State ======
+const assets = []; // [{img,w,h,name,id}]
+let layers = [];   // [{id, assetId, name, x, y, scale, rot, visible, locked, flipH, flipV}]
+let selectedIds = [];
+let currentWrap = {ox:0, oy:0}; // selection wrap offset for drawing/handles
+
+// History (undo/redo)
+const history = []; // stack of snapshots
+const redoStack = [];
+const HISTORY_LIMIT = 100;
+
+// ====== DOM ======
+const fileInput = document.getElementById('fileInput');
+const assetThumbs = document.getElementById('assetThumbs');
+const layerList = document.getElementById('layers');
+const canvas = document.getElementById('tile');
+const ctx = canvas.getContext('2d');
+const tilePresets = document.getElementById('tilePresets');
+const bgToggle = document.getElementById('bgToggle');
+const bgColorInput = document.getElementById('bgColor');
+const zoomInput = document.getElementById('zoom');
+const zoomLbl = document.getElementById('zoomLbl');
+const exportSizeSel = document.getElementById('exportSize');
+const exportCustom = document.getElementById('exportCustom');
+const exportBtn = document.getElementById('exportBtn');
+const fileNameInput = document.getElementById('fileName');
+const estTime = document.getElementById('estTime');
+const undoBtn = document.getElementById('undoBtn');
+const redoBtn = document.getElementById('redoBtn');
+const flipHBtn = document.getElementById('flipHBtn');
+const flipVBtn = document.getElementById('flipVBtn');
+
+// ====== Utils ======
+const uid = (()=>{ let i=1; return ()=> i++; })();
+function getAsset(assetId){ return assets.find(a=>a.id===assetId); }
+function getLayer(id){ return layers.find(l=>l.id===id); }
+function setSelected(ids){ selectedIds = Array.isArray(ids) ? ids : [ids]; currentWrap={ox:0,oy:0}; renderLayers(); draw(); }
+
+function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value}, zoom: parseInt(zoomInput.value) }; }
+function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; Array.from(tilePresets.children).forEach(b=> b.classList.toggle('active', parseInt(b.dataset.size)===canvas.width)); if(s.zoom){ zoomInput.value = s.zoom; } updateZoom(); renderLayers(); draw(); updateUndoUI(); }
+function pushHistory(){ history.push(snapshot()); if(history.length>HISTORY_LIMIT) history.shift(); redoStack.length = 0; updateUndoUI(); }
+function updateUndoUI(){ undoBtn.disabled = history.length<=1; redoBtn.disabled = redoStack.length===0; }
+function undo(){ if(history.length<=1) return; const curr = history.pop(); redoStack.push(curr); const prev = history[history.length-1]; applySnapshot(prev); }
+function redo(){ if(!redoStack.length) return; const s = redoStack.pop(); history.push(s); applySnapshot(s); }
+
+function drawWrappedImage(img, x, y, w, h, rad, flipH=false, flipV=false){ const W = canvas.width, H = canvas.height; const pts = [[0,0],[-W,0],[W,0],[0,-H],[0,H],[-W,-H],[W,-H],[-W,H],[W,H]]; for(const [ox,oy] of pts){ ctx.save(); ctx.translate(x+ox,y+oy); ctx.rotate(rad); ctx.scale(flipH?-1:1, flipV?-1:1); ctx.drawImage(img,-w/2,-h/2,w,h); ctx.restore(); } }
+function pointToLocal(x,y,layer,wrap={ox:0,oy:0}){ const dx=(x-(layer.x+wrap.ox)), dy=(y-(layer.y+wrap.oy)); const rad=-layer.rot*Math.PI/180; const c=Math.cos(rad), s=Math.sin(rad); return { x: dx*c - dy*s, y: dx*s + dy*c }; }
+function wrappedOffsets(){ const W=canvas.width,H=canvas.height; return [{ox:0,oy:0},{ox:-W,oy:0},{ox:W,oy:0},{ox:0,oy:-H},{ox:0,oy:H},{ox:-W,oy:-H},{ox:W,oy:-H},{ox:-W,oy:H},{ox:W,oy:H}]; }
+function hitTestWrapped(x,y){ for(let i=layers.length-1;i>=0;i--){ const L=layers[i]; if(!L.visible||L.locked) continue; const A=getAsset(L.assetId); if(!A) continue; const halfW=A.w*L.scale/2, halfH=A.h*L.scale/2; for(const off of wrappedOffsets()){ const p=pointToLocal(x,y,L,off); if(p.x>=-halfW && p.x<=halfW && p.y>=-halfH && p.y<=halfH){ return {layer:L, wrap:off}; } } } return null; }
+function handleAtWrapped(layer, x, y){ const A=getAsset(layer.assetId); if(!A) return null; const w=A.w*layer.scale, h=A.h*layer.scale; for(const off of wrappedOffsets()){ const p=pointToLocal(x,y,layer,off); const pts=[[-w/2,-h/2],[0,-h/2],[w/2,-h/2],[w/2,0],[w/2,h/2],[0,h/2],[-w/2,h/2],[-w/2,0]]; for(let i=0;i<pts.length;i++){ const dx=p.x-pts[i][0], dy=p.y-pts[i][1]; if(Math.abs(dx)<=10 && Math.abs(dy)<=10) return {which:i, wrap:off}; } if(Math.hypot(p.x-0,p.y-(-h/2-28))<=14) return {which:'rot', wrap:off}; } return null; }
+
+function drawSelection(layer){ const A=getAsset(layer.assetId); if(!A) return; const w=A.w*layer.scale, h=A.h*layer.scale; const wrap=currentWrap; ctx.save(); ctx.translate(layer.x+wrap.ox,layer.y+wrap.oy); ctx.rotate(layer.rot*Math.PI/180); ctx.strokeStyle= '#10b981'; ctx.setLineDash([6,4]); ctx.lineWidth=2; ctx.strokeRect(-w/2,-h/2,w,h); ctx.setLineDash([]); const hs=10; ctx.fillStyle='#fff'; ctx.strokeStyle='#000'; const pts=[[-w/2,-h/2],[0,-h/2],[w/2,-h/2],[w/2,0],[w/2,h/2],[0,h/2],[-w/2,h/2],[-w/2,0]]; for(const p of pts){ ctx.beginPath(); ctx.rect(p[0]-hs/2,p[1]-hs/2,hs,hs); ctx.fill(); ctx.stroke(); } ctx.beginPath(); ctx.arc(0,-h/2-24,7,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); }
+
+function clear(){ if(bgToggle.checked){ ctx.fillStyle=bgColorInput.value; ctx.fillRect(0,0,canvas.width,canvas.height); } else { ctx.clearRect(0,0,canvas.width,canvas.height); } }
+function draw(){ clear(); for(const L of layers){ if(!L.visible) continue; const A=getAsset(L.assetId); if(!A) continue; const w=A.w*L.scale, h=A.h*L.scale; drawWrappedImage(A.img, L.x, L.y, w, h, L.rot*Math.PI/180, !!L.flipH, !!L.flipV); } const primary = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(primary) drawSelection(primary); }
+
+function renderAssets(){ assetThumbs.innerHTML=''; for(const a of assets){ const d=document.createElement('div'); d.style.width='64px'; d.style.height='64px'; d.style.border='1px solid var(--border)'; d.style.borderRadius='8px'; d.style.background='#0b1020'; d.style.display='grid'; d.style.placeItems='center'; d.style.overflow='hidden'; d.title='Double‑click to add as layer'; const im=document.createElement('img'); im.src=a.img.src; im.style.maxWidth='100%'; im.style.maxHeight='100%'; d.appendChild(im); d.addEventListener('dblclick', ()=> addLayerFromAsset(a.id)); assetThumbs.appendChild(d); } }
+function renderLayers(){ layerList.innerHTML=''; layers.forEach((L)=>{ const row=document.createElement('div'); row.className='layer' + (selectedIds.includes(L.id)?' selected':'') + (L.locked?' locked':''); row.dataset.id=L.id; const drag=document.createElement('div'); drag.className='icon drag-handle'; drag.textContent='≡'; const eye=document.createElement('div'); eye.className='icon'; eye.textContent= L.visible?'👁':'🚫'; const th=document.createElement('div'); th.className='thumb'; const im=document.createElement('img'); im.src=getAsset(L.assetId)?.img.src||''; th.appendChild(im); const name=document.createElement('div'); name.className='name'; name.textContent=L.name + (L.flipH?' [⇋]':'') + (L.flipV?' [⇅]':''); const lock=document.createElement('div'); lock.className='icon'; lock.textContent=L.locked?'🔒':'🔓'; row.appendChild(drag); row.appendChild(eye); row.appendChild(th); row.appendChild(name); row.appendChild(lock); row.addEventListener('click', (e)=>{ if(!e.ctrlKey && !e.metaKey) setSelected([L.id]); else { const s=new Set(selectedIds); if(s.has(L.id)) s.delete(L.id); else s.add(L.id); setSelected([...s]); } }); name.addEventListener('dblclick', ()=>{ const nn=prompt('Layer name', L.name||''); if(nn!=null){ L.name=nn; renderLayers(); }}); eye.addEventListener('click', (e)=>{ e.stopPropagation(); L.visible=!L.visible; renderLayers(); draw(); pushHistory(); }); lock.addEventListener('click', (e)=>{ e.stopPropagation(); L.locked=!L.locked; renderLayers(); pushHistory(); }); row.draggable=true; row.addEventListener('dragstart', (ev)=>{ ev.dataTransfer.setData('text/plain', String(L.id)); }); row.addEventListener('dragover', (ev)=> ev.preventDefault()); row.addEventListener('drop', (ev)=>{ ev.preventDefault(); const fromId=parseInt(ev.dataTransfer.getData('text/plain')); const toId=L.id; reorderLayer(fromId,toId); }); layerList.appendChild(row); }); }
+
+function addLayerFromAsset(assetId){ const A=getAsset(assetId); if(!A) return; const id=uid(); const off=layers.length*12; const L={ id, assetId, name:A.name||('Layer '+id), x: canvas.width/2+off, y: canvas.height/2+off, scale: Math.min(1, canvas.width/(A.w*1.5)), rot: 0, visible:true, locked:false, flipH:false, flipV:false }; layers.push(L); setSelected([id]); renderLayers(); draw(); pushHistory(); }
+function reorderLayer(fromId,toId){ const fromIdx=layers.findIndex(l=>l.id===fromId); const toIdx=layers.findIndex(l=>l.id===toId); if(fromIdx<0||toIdx<0||fromIdx===toIdx) return; const [it]=layers.splice(fromIdx,1); layers.splice(toIdx,0,it); renderLayers(); draw(); pushHistory(); }
+function duplicateSelected(){ if(!selectedIds.length) return; const id=selectedIds[selectedIds.length-1]; const L=getLayer(id); if(!L) return; const copy={...L, id:uid(), x:L.x+20, y:L.y+20, name:L.name+' copy'}; layers.splice(layers.indexOf(L)+1,0,copy); setSelected([copy.id]); renderLayers(); draw(); pushHistory(); }
+function deleteSelected(){ if(!selectedIds.length) return; layers=layers.filter(l=>!selectedIds.includes(l.id)); selectedIds=[]; renderLayers(); draw(); pushHistory(); }
+function bringForward(){ if(!selectedIds.length) return; const id=selectedIds[selectedIds.length-1]; const i=layers.findIndex(l=>l.id===id); if(i<0||i===layers.length-1) return; const [it]=layers.splice(i,1); layers.splice(i+1,0,it); renderLayers(); draw(); pushHistory(); }
+function sendBackward(){ if(!selectedIds.length) return; const id=selectedIds[selectedIds.length-1]; const i=layers.findIndex(l=>l.id===id); if(i<=0) return; const [it]=layers.splice(i,1); layers.splice(i-1,0,it); renderLayers(); draw(); pushHistory(); }
+
+// ====== Canvas interactions (wrap-aware) ======
+let mode='idle'; let start={x:0,y:0}; let startLayer=null; let activeHandle=null; const keysDown = new Set(); let changedDuringDrag=false;
+
+function toCanvas(e){ const r=canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)*canvas.width/r.width, y:(e.clientY-r.top)*canvas.height/r.height }; }
+function wrapCoord(x,y){ const W=canvas.width,H=canvas.height; while(x<0) x+=W; while(y<0) y+=H; x%=W; y%=H; return {x,y}; }
+
+canvas.addEventListener('mousedown', (e)=>{ const p=toCanvas(e); changedDuringDrag=false; const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(top){ const h=handleAtWrapped(top,p.x,p.y); if(h){ const wantRotate = (h.which==='rot') || e.altKey || keysDown.has('r'); mode = wantRotate ? 'rotate' : 'scale'; activeHandle=h.which; start=p; startLayer={...top}; currentWrap=h.wrap; return; } } const hit = hitTestWrapped(p.x,p.y); if(hit){ if(hit.layer.locked) return; setSelected([hit.layer.id]); mode = keysDown.has('r') ? 'rotate' : 'move'; start=p; startLayer={...hit.layer}; currentWrap=hit.wrap; } else { setSelected([]); mode='idle'; currentWrap={ox:0,oy:0}; }
+});
+window.addEventListener('mousemove', (e)=>{ if(mode==='idle'||!selectedIds.length) return; const L=getLayer(selectedIds[selectedIds.length-1]); if(!L) return; const p=toCanvas(e); if(mode==='move'){ const dx=p.x-start.x, dy=p.y-start.y; const wrapped=wrapCoord(startLayer.x+dx,startLayer.y+dy); L.x=wrapped.x; L.y=wrapped.y; changedDuringDrag=true; draw(); } else if(mode==='rotate'){ const cx=L.x+currentWrap.ox, cy=L.y+currentWrap.oy; const a1=Math.atan2(start.y-cy,start.x-cx); const a2=Math.atan2(p.y-cy,p.x-cx); let deg=(startLayer.rot + (a2-a1)*180/Math.PI); if(e.shiftKey){ deg=Math.round(deg/15)*15; } L.rot=deg; changedDuringDrag=true; draw(); } else if(mode==='scale'){ const A=getAsset(L.assetId); if(!A) return; if(keysDown.has('r')){ mode='rotate'; return; } const localStart=pointToLocal(start.x,start.y,L,currentWrap); const localNow=pointToLocal(p.x,p.y,L,currentWrap); const dist0=Math.hypot(localStart.x, localStart.y); const dist1=Math.hypot(localNow.x, localNow.y); let s = (dist1 / Math.max(1e-6, dist0)) * startLayer.scale; L.scale = Math.max(0.01, s); changedDuringDrag=true; draw(); }
+});
+window.addEventListener('mouseup', ()=>{ if(changedDuringDrag){ pushHistory(); } mode='idle'; activeHandle=null; });
+
+// Keyboard
+window.addEventListener('keydown', (e)=>{ const k=e.key.toLowerCase(); keysDown.add(k);
+  // Undo / Redo shortcuts
+  if((e.ctrlKey||e.metaKey) && k==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+  if((e.ctrlKey||e.metaKey) && k==='z' && e.shiftKey){ e.preventDefault(); redo(); return; }
+
+  const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null;
+  if(e.key==='Delete' || e.key==='Backspace'){ deleteSelected(); return; }
+  if((e.ctrlKey||e.metaKey) && k==='d'){ e.preventDefault(); duplicateSelected(); return; }
+
+  // Flip shortcuts
+  if(top && !e.ctrlKey && !e.metaKey){
+    if(k==='x'){ top.flipH = !top.flipH; draw(); renderLayers(); pushHistory(); return; }
+    if(k==='y'){ top.flipV = !top.flipV; draw(); renderLayers(); pushHistory(); return; }
+  }
+
+  if(!top) return;
+  const step = e.shiftKey ? 10 : 1;
+  if(['arrowleft','arrowright','arrowup','arrowdown'].includes(k)){
+    e.preventDefault();
+    if(k==='arrowleft') top.x=wrapCoord(top.x-step, top.y).x;
+    if(k==='arrowright') top.x=wrapCoord(top.x+step, top.y).x;
+    if(k==='arrowup') top.y=wrapCoord(top.x, top.y-step).y;
+    if(k==='arrowdown') top.y=wrapCoord(top.x, top.y+step).y;
+    draw(); pushHistory();
+  }
+  if(k==='l'){ top.locked=!top.locked; renderLayers(); pushHistory(); }
+  if(k==='h'){ top.visible=!top.visible; renderLayers(); draw(); pushHistory(); }
+  if(e.key===']'){ bringForward(); }
+  if(e.key==='['){ sendBackward(); }
+});
+window.addEventListener('keyup', (e)=>{ keysDown.delete(e.key.toLowerCase()); });
+
+// Buttons
+const duplicateBtn = document.getElementById('duplicateBtn');
+const deleteBtn = document.getElementById('deleteBtn');
+const upBtn = document.getElementById('upBtn');
+const downBtn = document.getElementById('downBtn');
+duplicateBtn.addEventListener('click', duplicateSelected);
+deleteBtn.addEventListener('click', deleteSelected);
+upBtn.addEventListener('click', bringForward);
+downBtn.addEventListener('click', sendBackward);
+undoBtn.addEventListener('click', undo);
+redoBtn.addEventListener('click', redo);
+flipHBtn.addEventListener('click', ()=>{ const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(!top) return; top.flipH=!top.flipH; renderLayers(); draw(); pushHistory(); });
+flipVBtn.addEventListener('click', ()=>{ const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(!top) return; top.flipV=!top.flipV; renderLayers(); draw(); pushHistory(); });
+
+// Tile presets
+tilePresets.addEventListener('click',(e)=>{ const b=e.target.closest('button'); if(!b) return; const s=parseInt(b.dataset.size); canvas.width=s; canvas.height=s; Array.from(tilePresets.children).forEach(x=>x.classList.toggle('active', x===b)); draw(); updateZoom(); pushHistory(); });
+
+// Background toggle & color
+bgToggle.addEventListener('change', ()=>{ draw(); pushHistory(); });
+bgColorInput.addEventListener('change', ()=>{ draw(); pushHistory(); });
+bgColorInput.addEventListener('input', ()=>{ draw(); });
+
+// Zoom control (scales display only, not internal resolution)
+function updateZoom(){ const z = parseInt(zoomInput.value)/100; const cssW = Math.max(280, Math.round(canvas.width * z)); canvas.style.width = cssW + 'px'; canvas.style.height = 'auto'; zoomLbl.textContent = Math.round(z*100) + '%'; }
+zoomInput.addEventListener('input', updateZoom);
+
+// Export
+function estimateTime(px){ const n = layers.length; const work = n * (px*px); if(work < 2e8) return 'instant'; if(work < 6e8) return '~0.5–1s'; if(work < 1.2e9) return '~1–2s'; return 'a few seconds'; }
+function getExportSize(){ const custom = parseInt(exportCustom.value); return (custom && custom>0) ? custom : parseInt(exportSizeSel.value); }
+exportSizeSel.addEventListener('change', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
+exportCustom.addEventListener('input', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
+
+exportBtn.addEventListener('click', ()=>{
+  if(!layers.length){ alert('Add at least one layer.'); return; }
+  const size = getExportSize() || 1000; const off=document.createElement('canvas'); off.width=size; off.height=size; const octx=off.getContext('2d');
+  if(bgToggle.checked){ octx.fillStyle=bgColorInput.value; octx.fillRect(0,0,size,size); }
+  const sx=size/canvas.width, sy=size/canvas.height;
+  for(const L of layers){ if(!L.visible) continue; const A=getAsset(L.assetId); if(!A) continue; const w=A.w*L.scale*sx, h=A.h*L.scale*sy; const x=L.x*sx, y=L.y*sy; const rad=L.rot*Math.PI/180; const pts=[[0,0],[-size,0],[size,0],[0,-size],[0,size],[-size,-size],[size,-size],[-size,size],[size,size]]; for(const [ox,oy] of pts){ octx.save(); octx.translate(x+ox,y+oy); octx.rotate(rad); octx.scale(L.flipH?-1:1, L.flipV?-1:1); octx.drawImage(A.img,-w/2,-h/2,w,h); octx.restore(); } }
+  const a=document.createElement('a'); const base=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); a.href=off.toDataURL('image/png'); a.download=`${base}_${size}${bgToggle.checked?'':'_transparent'}.png`; a.click();
+});
+
+// File input
+fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
+
+// Init
+updateZoom(); renderLayers(); draw(); pushHistory();
