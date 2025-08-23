@@ -29,6 +29,25 @@ const undoBtn = document.getElementById('undoBtn');
 const redoBtn = document.getElementById('redoBtn');
 const flipHBtn = document.getElementById('flipHBtn');
 const flipVBtn = document.getElementById('flipVBtn');
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+
+// ====== Theme ======
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.body.classList.add('light-mode');
+    themeToggleBtn.textContent = '🌜';
+  } else {
+    document.body.classList.remove('light-mode');
+    themeToggleBtn.textContent = '🌞';
+  }
+}
+
+themeToggleBtn.addEventListener('click', () => {
+  const isLight = document.body.classList.contains('light-mode');
+  const newTheme = isLight ? 'dark' : 'light';
+  applyTheme(newTheme);
+  localStorage.setItem('tileit-theme', newTheme);
+});
 
 // ====== Utils ======
 const uid = (()=>{ let i=1; return ()=> i++; })();
@@ -155,4 +174,6 @@ exportBtn.addEventListener('click', ()=>{
 fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
 
 // Init
+const savedTheme = localStorage.getItem('tileit-theme') || 'dark';
+applyTheme(savedTheme);
 updateZoom(); renderLayers(); draw(); pushHistory();
