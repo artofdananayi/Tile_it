@@ -37,3 +37,8 @@ input[type="number"], input[type="text"], select { width:100%; padding:8px 12px;
   flex-direction: column;
   gap: 16px;
 }
+
+body.light-mode .card {
+  border: 1px solid #D1D5DB;
+  box-shadow: none;
+}
