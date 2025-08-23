@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repeat Grid Tool - Adobe XD Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f8f8;
+            display: flex;
+            height: 100vh;
+        }
+
+        .toolbar {
+            width: 250px;
+            background: #2c2c2c;
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #e8e8e8;
+            position: relative;
+        }
+
+        .canvas {
+            width: 700px;
+            height: 700px;
+            background: white;
+            border: 2px solid #ddd;
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .original-element {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            width: 100px;
+            height: 100px;
+            background: #007acc;
+            border-radius: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .original-element:hover {
+            transform: scale(1.02);
+        }
+
+        .original-element.selected {
+            border: 2px solid #007acc;
+            box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
+        }
+
+        .repeat-grid {
+            position: absolute;
+        }
+
+        .repeated-item {
+            position: absolute;
+            background: #007acc;
+            border-radius: 0px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .repeated-item:hover {
+            transform: scale(1.02);
+        }
+
+        .grid-handle {
+            position: absolute;
+            background: #00d084;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .grid-handle:hover {
+            background: #00b570;
+            transform: scale(1.1);
+        }
+
+        .handle-right {
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: ew-resize;
+        }
+
+        .handle-bottom {
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: ns-resize;
+        }
+
+        .spacing-handle {
+            position: absolute;
+            background: rgba(0, 208, 132, 0.5);
+            border: 1px solid #00d084;
+            cursor: pointer;
+            z-index: 99;
+        }
+
+        .spacing-handle-h {
+            cursor: ew-resize;
+        }
+
+        .spacing-handle-v {
+            cursor: ns-resize;
+        }
+
+        .btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #005999;
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #00d084;
+        }
+
+        .btn-success:hover {
+            background: #00b570;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: #007acc;
+            background: rgba(0, 122, 204, 0.05);
+            color: #007acc;
+        }
+
+        .element-preview {
+            width: 60px;
+            height: 40px;
+            background: #007acc;
+            border-radius: 4px;
+            margin: 10px auto;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .controls-group {
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 15px;
+        }
+
+        .controls-group h3 {
+            color: #00d084;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .control-row label {
+            font-size: 12px;
+            color: #ccc;
+            min-width: 60px;
+        }
+
+        .control-row input {
+            flex: 1;
+            padding: 4px 8px;
+            border: 1px solid #555;
+            background: #404040;
+            color: white;
+            border-radius: 3px;
+        }
+
+        .grid-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <h2 style="color: #00d084; margin-bottom: 20px;">Repeat Grid Tool</h2>
+
+        <div class="drop-zone" id="dropZone">
+            <div>Drop PNG/JPG here</div>
+            <div style="font-size: 12px; margin-top: 5px;">or click to browse</div>
+            <div class="element-preview" id="elementPreview"></div>
+        </div>
+        <input type="file" id="fileInput" class="file-input" accept="image/*">
+
+        <div class="controls-group">
+            <h3>Element Size</h3>
+            <div class="control-row">
+                <label>Size:</label>
+                <input type="number" id="elementSize" value="100" min="50" max="200" step="10">
+            </div>
+            <div class="control-row">
+                <label>Text:</label>
+                <input type="text" id="elementText" value="Item" placeholder="Enter text">
+            </div>
+        </div>
+
+        <button class="btn btn-success" id="repeatGridBtn" disabled>
+            Create Repeat Grid
+        </button>
+
+        <button class="btn" id="resetBtn" disabled>
+            Reset Grid
+        </button>
+
+        <div class="controls-group" id="gridControls" style="display: none;">
+            <h3>Grid Info</h3>
+            <div class="grid-info" id="gridInfo">
+                Columns: 1, Rows: 1<br>
+                Total Items: 1
+            </div>
+        </div>
+
+        <div style="margin-top: auto;">
+            <button class="btn" onclick="exportGrid()">Export as JSON</button>
+            <button class="btn" onclick="exportAsSVG()">Export as SVG</button>
+            <button class="btn" onclick="document.getElementById('importFile').click()">Import</button>
+            <input type="file" id="importFile" class="file-input" accept=".json">
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <div class="canvas" id="canvas">
+            <div class="original-element" id="originalElement">
+                Item
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let isGridActive = false;
+        let gridData = {
+            columns: 1,
+            rows: 1,
+            horizontalSpacing: 0,
+            verticalSpacing: 0,
+            elementSize: 100,
+            elementText: 'Item'
+        };
+        let dragState = {
+            isDragging: false,
+            dragType: null, // 'horizontal', 'vertical', 'spacing-h', 'spacing-v'
+            startX: 0,
+            startY: 0,
+            initialCols: 1,
+            initialRows: 1,
+            spacingIndex: -1
+        };
+
+        // Element references
+        const canvas = document.getElementById('canvas');
+        const originalElement = document.getElementById('originalElement');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const repeatGridBtn = document.getElementById('repeatGridBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const elementPreview = document.getElementById('elementPreview');
+        const gridControls = document.getElementById('gridControls');
+        const gridInfo = document.getElementById('gridInfo');
+
+        // File handling
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('drop', handleDrop);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                loadImage(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                loadImage(e.target.files[0]);
+            }
+        }
+
+        function loadImage(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file (PNG, JPG, etc.)');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImage = e.target.result;
+                originalElement.style.backgroundImage = `url(${currentImage})`;
+                originalElement.style.backgroundSize = 'cover';
+                originalElement.style.backgroundPosition = 'center';
+                originalElement.textContent = '';
+
+                elementPreview.style.backgroundImage = `url(${currentImage})`;
+                elementPreview.style.backgroundSize = 'cover';
+                elementPreview.style.backgroundPosition = 'center';
+
+                repeatGridBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Element controls
+        document.getElementById('elementSize').addEventListener('input', updateElementSize);
+        document.getElementById('elementText').addEventListener('input', updateElementText);
+
+        function updateElementSize() {
+            gridData.elementSize = parseInt(document.getElementById('elementSize').value);
+            originalElement.style.width = gridData.elementSize + 'px';
+            originalElement.style.height = gridData.elementSize + 'px';
+
+            if (isGridActive) {
+                updateGrid();
+            }
+        }
+
+        function updateElementText() {
+            gridData.elementText = document.getElementById('elementText').value;
+            if (!currentImage) {
+                originalElement.textContent = gridData.elementText;
+            }
+
+            if (isGridActive) {
+                updateGrid();
+            }
+        }
+
+        // Repeat Grid functionality
+        repeatGridBtn.addEventListener('click', createRepeatGrid);
+        resetBtn.addEventListener('click', resetGrid);
+
+        function createRepeatGrid() {
+            if (isGridActive) return;
+
+            isGridActive = true;
+            originalElement.classList.add('selected');
+            repeatGridBtn.disabled = true;
+            resetBtn.disabled = false;
+            gridControls.style.display = 'block';
+
+            createHandles();
+            updateGrid();
+        }
+
+        function createHandles() {
+            // Right handle for horizontal expansion
+            const rightHandle = document.createElement('div');
+            rightHandle.className = 'grid-handle handle-right';
+            rightHandle.id = 'rightHandle';
+            originalElement.appendChild(rightHandle);
+
+            // Bottom handle for vertical expansion
+            const bottomHandle = document.createElement('div');
+            bottomHandle.className = 'grid-handle handle-bottom';
+            bottomHandle.id = 'bottomHandle';
+            originalElement.appendChild(bottomHandle);
+
+            // Add event listeners for handles
+            rightHandle.addEventListener('mousedown', (e) => startDrag(e, 'horizontal'));
+            bottomHandle.addEventListener('mousedown', (e) => startDrag(e, 'vertical'));
+        }
+
+        function startDrag(e, type) {
+            e.preventDefault();
+            dragState.isDragging = true;
+            dragState.dragType = type;
+            dragState.startX = e.clientX;
+            dragState.startY = e.clientY;
+            dragState.initialCols = gridData.columns;
+            dragState.initialRows = gridData.rows;
+
+            document.addEventListener('mousemove', handleDrag);
+            document.addEventListener('mouseup', endDrag);
+        }
+
+        function handleDrag(e) {
+            if (!dragState.isDragging) return;
+
+            const deltaX = e.clientX - dragState.startX;
+            const deltaY = e.clientY - dragState.startY;
+
+            if (dragState.dragType === 'horizontal') {
+                const itemWidth = gridData.elementSize; // No spacing for seamless tiles
+                const newCols = Math.max(1, dragState.initialCols + Math.round(deltaX / itemWidth));
+                if (newCols !== gridData.columns) {
+                    gridData.columns = newCols;
+                    updateGrid();
+                }
+            } else if (dragState.dragType === 'vertical') {
+                const itemHeight = gridData.elementSize; // No spacing for seamless tiles
+                const newRows = Math.max(1, dragState.initialRows + Math.round(deltaY / itemHeight));
+                if (newRows !== gridData.rows) {
+                    gridData.rows = newRows;
+                    updateGrid();
+                }
+            } else if (dragState.dragType === 'spacing-h') {
+                gridData.horizontalSpacing = Math.max(0, gridData.horizontalSpacing + deltaX / 2);
+                updateGrid();
+            } else if (dragState.dragType === 'spacing-v') {
+                gridData.verticalSpacing = Math.max(0, gridData.verticalSpacing + deltaY / 2);
+                updateGrid();
+            } else if (dragState.dragType === 'spacing-h') {
+                gridData.horizontalSpacing = Math.max(0, gridData.horizontalSpacing + deltaX / 2);
+                updateGrid();
+            } else if (dragState.dragType === 'spacing-v') {
+                gridData.verticalSpacing = Math.max(0, gridData.verticalSpacing + deltaY / 2);
+                updateGrid();
+            }
+        }
+
+        function endDrag() {
+            dragState.isDragging = false;
+            dragState.dragType = null;
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        function updateGrid() {
+            // Remove existing grid items
+            const existingGrid = canvas.querySelector('.repeat-grid');
+            if (existingGrid) {
+                existingGrid.remove();
+            }
+
+            // Remove existing spacing handles
+            canvas.querySelectorAll('.spacing-handle').forEach(h => h.remove());
+
+            if (gridData.columns === 1 && gridData.rows === 1) {
+                updateGridInfo();
+                return;
+            }
+
+            // Create grid container
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'repeat-grid';
+            canvas.appendChild(gridContainer);
+
+            const startX = 50;
+            const startY = 50;
+
+            // Create repeated items
+            for (let row = 0; row < gridData.rows; row++) {
+                for (let col = 0; col < gridData.columns; col++) {
+                    if (row === 0 && col === 0) continue; // Skip original
+
+                    const item = document.createElement('div');
+                    item.className = 'repeated-item';
+
+                    const x = startX + col * (gridData.elementSize + gridData.horizontalSpacing);
+                    const y = startY + row * (this.gridData.elementSize + this.gridData.verticalSpacing);
+
+                    item.style.left = x + 'px';
+                    item.style.top = y + 'px';
+                    item.style.width = gridData.elementSize + 'px';
+                    item.style.height = gridData.elementSize + 'px';
+
+                    if (currentImage) {
+                        item.style.backgroundImage = `url(${currentImage})`;
+                        item.style.backgroundSize = 'cover';
+                        item.style.backgroundPosition = 'center';
+                    } else {
+                        item.style.background = '#007acc';
+                        item.textContent = gridData.elementText + ' ' + (row * gridData.columns + col + 1);
+                    }
+
+                    gridContainer.appendChild(item);
+                }
+            }
+
+            createSpacingHandles();
+            updateGridInfo();
+        }
+
+        function createSpacingHandles() {
+            const startX = 50;
+            const startY = 50;
+
+            // Horizontal spacing handles
+            if (gridData.columns > 1) {
+                for (let row = 0; row < gridData.rows; row++) {
+                    for (let col = 0; col < gridData.columns - 1; col++) {
+                        const handle = document.createElement('div');
+                        handle.className = 'spacing-handle spacing-handle-h';
+
+                        const x = startX + col * (gridData.elementSize + gridData.horizontalSpacing) + gridData.elementSize;
+                        const y = startY + row * (gridData.elementSize + gridData.verticalSpacing);
+
+                        handle.style.left = x + 'px';
+                        handle.style.top = y + 'px';
+                        handle.style.width = gridData.horizontalSpacing + 'px';
+                        handle.style.height = gridData.elementSize + 'px';
+
+                        handle.addEventListener('mousedown', (e) => startDrag(e, 'spacing-h'));
+                        canvas.appendChild(handle);
+                    }
+                }
+            }
+
+            // Vertical spacing handles
+            if (gridData.rows > 1) {
+                for (let row = 0; row < gridData.rows - 1; row++) {
+                    for (let col = 0; col < gridData.columns; col++) {
+                        const handle = document.createElement('div');
+                        handle.className = 'spacing-handle spacing-handle-v';
+
+                        const x = startX + col * (gridData.elementSize + gridData.horizontalSpacing);
+                        const y = startY + row * (gridData.elementSize + gridData.verticalSpacing) + gridData.elementSize;
+
+                        handle.style.left = x + 'px';
+                        handle.style.top = y + 'px';
+                        handle.style.width = gridData.elementSize + 'px';
+                        handle.style.height = gridData.verticalSpacing + 'px';
+
+                        handle.addEventListener('mousedown', (e) => startDrag(e, 'spacing-v'));
+                        canvas.appendChild(handle);
+                    }
+                }
+            }
+        }
+
+        function updateGridInfo() {
+            gridInfo.innerHTML = `
+                Columns: ${gridData.columns}, Rows: ${gridData.rows}<br>
+                Total Items: ${gridData.columns * gridData.rows}<br>
+                H Spacing: ${Math.round(gridData.horizontalSpacing)}px<br>
+                V Spacing: ${Math.round(gridData.verticalSpacing)}px
+            `;
+        }
+
+        function resetGrid() {
+            isGridActive = false;
+            gridData.columns = 1;
+            gridData.rows = 1;
+
+            originalElement.classList.remove('selected');
+            canvas.querySelectorAll('.grid-handle').forEach(h => h.remove());
+            canvas.querySelectorAll('.repeat-grid').forEach(g => g.remove());
+            canvas.querySelectorAll('.spacing-handle').forEach(h => h.remove());
+
+            repeatGridBtn.disabled = currentImage === null;
+            resetBtn.disabled = true;
+            gridControls.style.display = 'none';
+        }
+
+        function exportGrid() {
+            const data = {
+                ...gridData,
+                hasImage: currentImage !== null,
+                image: currentImage,
+                timestamp: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'repeat-grid.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportAsSVG() {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '700');
+            svg.setAttribute('height', '700');
+            svg.setAttribute('viewBox', '0 0 700 700');
+
+            for (let row = 0; row < gridData.rows; row++) {
+                for (let col = 0; col < gridData.columns; col++) {
+                    const x = 50 + col * gridData.elementSize;
+                    const y = 50 + row * gridData.elementSize;
+
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', x);
+                    rect.setAttribute('y', y);
+                    rect.setAttribute('width', gridData.elementSize);
+                    rect.setAttribute('height', gridData.elementSize);
+                    rect.setAttribute('fill', currentImage ? 'url(#pattern)' : '#007acc');
+                    rect.setAttribute('rx', '0');
+                    svg.appendChild(rect);
+
+                    if (!currentImage) {
+                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        text.setAttribute('x', x + gridData.elementSize / 2);
+                        text.setAttribute('y', y + gridData.elementSize / 2 + 5);
+                        text.setAttribute('text-anchor', 'middle');
+                        text.setAttribute('fill', 'white');
+                        text.setAttribute('font-family', 'sans-serif');
+                        text.setAttribute('font-weight', 'bold');
+                        text.textContent = gridData.elementText + ' ' + (row * gridData.columns + col + 1);
+                        svg.appendChild(text);
+                    }
+                }
+            }
+
+            if (currentImage) {
+                const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+                pattern.setAttribute('id', 'pattern');
+                pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+                pattern.setAttribute('width', gridData.elementSize);
+                pattern.setAttribute('height', this.gridData.elementSize);
+
+                const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+                image.setAttribute('href', currentImage);
+                image.setAttribute('width', gridData.elementSize);
+                image.setAttribute('height', gridData.elementSize);
+
+                pattern.appendChild(image);
+                defs.appendChild(pattern);
+                svg.insertBefore(defs, svg.firstChild);
+            }
+
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'repeat-grid.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Import functionality
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+
+                    // Restore grid data
+                    gridData = { ...data };
+
+                    // Update form values
+                    document.getElementById('elementSize').value = data.elementSize || 100;
+                    document.getElementById('elementText').value = data.elementText || 'Item';
+
+                    // Restore image if exists
+                    if (data.image) {
+                        currentImage = data.image;
+                        originalElement.style.backgroundImage = `url(${currentImage})`;
+                        originalElement.style.backgroundSize = 'cover';
+                        originalElement.style.backgroundPosition = 'center';
+                        originalElement.textContent = '';
+
+                        elementPreview.style.backgroundImage = `url(${currentImage})`;
+                        elementPreview.style.backgroundSize = 'cover';
+                        elementPreview.style.backgroundPosition = 'center';
+
+                        repeatGridBtn.disabled = false;
+                    }
+
+                    // Update element size and text
+                    updateElementSize();
+                    updateElementText();
+
+                    alert('Grid imported successfully!');
+                } catch (error) {
+                    alert('Error importing file: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>
