@@ -4,6 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tile-it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#10b981">
@@ -38,44 +41,47 @@
     </div>
 
     <div class="row">
-      <div class="card">
-        <h2 style="margin:0 0 8px 0">Import Images</h2>
-        <input type="file" id="fileInput" accept="image/*" multiple />
-        <div class="hint" style="margin-top:6px">Double‑click a thumbnail to add it as a new layer.</div>
-        <div id="assetThumbs" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"></div>
-
-        <h2 style="margin:16px 0 8px 0">Layers</h2>
-        <div id="layers" class="layers"></div>
-        <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
-          <button id="duplicateBtn" class="btn ghost">Duplicate</button>
-          <button id="deleteBtn" class="btn secondary">Delete</button>
-          <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
-          <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
-          <button id="upBtn" class="btn ghost">Bring Forward</button>
-          <button id="downBtn" class="btn ghost">Send Backward</button>
+      <div class="left-column">
+        <div class="card">
+          <h2 style="margin:0 0 8px 0">Import Images</h2>
+          <input type="file" id="fileInput" accept="image/*" multiple />
+          <div class="hint" style="margin-top:6px">Double‑click a thumbnail to add it as a new layer.</div>
+          <div id="assetThumbs" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"></div>
         </div>
-
-        <h2 style="margin:16px 0 8px 0">Export</h2>
-        <div class="toolbar" style="gap:8px">
-          <label class="hint">Size</label>
-          <select id="exportSize">
-            <option value="512">512</option>
-            <option value="1000" selected>1000</option>
-            <option value="1024">1024</option>
-            <option value="2048">2048</option>
-            <option value="4096">4096</option>
-          </select>
-          <label class="hint">or custom</label>
-          <input id="exportCustom" type="number" min="64" max="8192" step="1" placeholder="custom px" style="width:120px" />
+        <div class="card">
+          <h2 style="margin:0 0 8px 0">Layers</h2>
+          <div id="layers" class="layers"></div>
+          <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
+            <button id="duplicateBtn" class="btn ghost">Duplicate</button>
+            <button id="deleteBtn" class="btn secondary">Delete</button>
+            <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
+            <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
+            <button id="upBtn" class="btn ghost">Bring Forward</button>
+            <button id="downBtn" class="btn ghost">Send Backward</button>
+          </div>
         </div>
-        <div class="toolbar" style="margin-top:8px; gap:8px">
-          <label class="hint">File name</label>
-          <input id="fileName" type="text" placeholder="tile" value="tile" style="width:160px" />
-          <button id="exportBtn" class="btn">Export PNG</button>
+        <div class="card">
+          <h2 style="margin:0 0 8px 0">Export</h2>
+          <div class="toolbar" style="gap:8px">
+            <label class="hint">Size</label>
+            <select id="exportSize">
+              <option value="512">512</option>
+              <option value="1000" selected>1000</option>
+              <option value="1024">1024</option>
+              <option value="2048">2048</option>
+              <option value="4096">4096</option>
+            </select>
+            <label class="hint">or custom</label>
+            <input id="exportCustom" type="number" min="64" max="8192" step="1" placeholder="custom px" style="width:120px" />
+          </div>
+          <div class="toolbar" style="margin-top:8px; gap:8px">
+            <label class="hint">File name</label>
+            <input id="fileName" type="text" placeholder="tile" value="tile" style="width:160px" />
+            <button id="exportBtn" class="btn">Export PNG</button>
+          </div>
+          <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
         </div>
-        <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
       </div>
-
       <div class="card">
         <h2 style="margin:0 0 8px 0">Tile</h2>
         <div id="canvasWrap">
