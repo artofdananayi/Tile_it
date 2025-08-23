@@ -1,6 +1,6 @@
 :root { --bg:#18181B; --panel:#27272A; --border:#3F3F46; --text:#F4F4F5; --muted:#A1A1AA; --accent:#60A5FA; --btn-text: var(--bg); }
 
-body.light-mode { --bg:#F9FAFB; --panel:#FFFFFF; --border:#E5E7EB; --text:#111827; --muted:#6B7280; --accent:#3B82F6; --btn-text: var(--text-light, #F9FAFB); }
+body.light-mode { --bg:#E5E7EB; --panel:#E5E7EB; --border:#D1D5DB; --text:#111827; --muted:#6B7280; --accent:#3B82F6; --btn-text: var(--text-light, #F9FAFB); }
 
 *{ box-sizing:border-box }
 body{ margin:0; font-family:'Inter', system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; background-color:var(--bg); color:var(--text); background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(to right, var(--border) 1px, var(--bg) 1px); background-size: 40px 40px; }
@@ -39,6 +39,6 @@ input[type="number"], input[type="text"], select { width:100%; padding:8px 12px;
 }
 
 body.light-mode .card {
-  border: 1px solid #D1D5DB;
+  border: 1px solid var(--border);
   box-shadow: none;
 }
