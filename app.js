@@ -173,6 +173,35 @@ exportBtn.addEventListener('click', ()=>{
 // File input
 fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
 
+// ====== Mode Switching ======
+const modeTilingBtn = document.getElementById('mode-tiling');
+const modeRepeatGridBtn = document.getElementById('mode-repeat-grid');
+const tilingToolContainer = document.getElementById('tiling-tool-container');
+const repeatGridToolContainer = document.getElementById('repeat-grid-tool-container');
+let rgToolInitialized = false;
+
+function switchToTiling() {
+    tilingToolContainer.style.display = 'block';
+    repeatGridToolContainer.style.display = 'none';
+    modeTilingBtn.classList.add('active');
+    modeRepeatGridBtn.classList.remove('active');
+}
+
+function switchToRepeatGrid() {
+    tilingToolContainer.style.display = 'none';
+    repeatGridToolContainer.style.display = 'flex'; // The container uses flexbox
+    modeTilingBtn.classList.remove('active');
+    modeRepeatGridBtn.classList.add('active');
+    if (!rgToolInitialized) {
+        RepeatGridTool.init();
+        rgToolInitialized = true;
+    }
+}
+
+modeTilingBtn.addEventListener('click', switchToTiling);
+modeRepeatGridBtn.addEventListener('click', switchToRepeatGrid);
+
+
 // Init
 const savedTheme = localStorage.getItem('tileit-theme') || 'dark';
 applyTheme(savedTheme);
