@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="repeat-grid.css">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#10b981">
 <script>
@@ -21,10 +22,19 @@
   <div class="wrap">
     <div class="title">
       <h1 style="margin:0">Tile-it</h1>
+      <div class="seg" id="mode-switcher">
+        <button id="mode-tiling" class="btn active">Tiling</button>
+        <button id="mode-repeat-grid" class="btn">Repeat Grid</button>
+      </div>
       <div class="toolbar">
+        <button id="themeToggleBtn" class="btn secondary">🌞</button>
+      </div>
+    </div>
+
+    <div id="tiling-tool-container">
+      <div class="toolbar title-toolbar">
         <button id="undoBtn" class="btn secondary" disabled>Undo</button>
         <button id="redoBtn" class="btn secondary" disabled>Redo</button>
-        <button id="themeToggleBtn" class="btn secondary">🌞</button>
         <div class="seg" id="tilePresets">
           <button data-size="1000" class="active">1000</button>
           <button data-size="1024">1024</button>
@@ -39,59 +49,119 @@
           <span id="zoomLbl" class="hint">20%</span>
         </div>
       </div>
+      <div class="row">
+        <div class="left-column">
+          <div class="card">
+            <h2 style="margin:0 0 8px 0">Import Images</h2>
+            <input type="file" id="fileInput" accept="image/*" multiple />
+            <div class="hint" style="margin-top:6px">Double‑click a thumbnail to add it as a new layer.</div>
+            <div id="assetThumbs" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"></div>
+          </div>
+          <div class="card">
+            <h2 style="margin:0 0 8px 0">Layers</h2>
+            <div id="layers" class="layers"></div>
+            <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
+              <button id="duplicateBtn" class="btn ghost">Duplicate</button>
+              <button id="deleteBtn" class="btn secondary">Delete</button>
+              <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
+              <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
+              <button id="upBtn" class="btn ghost">Bring Forward</button>
+              <button id="downBtn" class="btn ghost">Send Backward</button>
+            </div>
+          </div>
+          <div class="card">
+            <h2 style="margin:0 0 8px 0">Export</h2>
+            <div class="toolbar" style="gap:8px">
+              <label class="hint">Size</label>
+              <select id="exportSize">
+                <option value="512">512</option>
+                <option value="1000" selected>1000</option>
+                <option value="1024">1024</option>
+                <option value="2048">2048</option>
+                <option value="4096">4096</option>
+              </select>
+              <label class="hint">or custom</label>
+              <input id="exportCustom" type="number" min="64" max="8192" step="1" placeholder="custom px" style="width:120px" />
+            </div>
+            <div class="toolbar" style="margin-top:8px; gap:8px">
+              <label class="hint">File name</label>
+              <input id="fileName" type="text" placeholder="tile" value="tile" style="width:160px" />
+              <button id="exportBtn" class="btn">Export PNG</button>
+            </div>
+            <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 style="margin:0 0 8px 0">Tile</h2>
+          <div id="canvasWrap">
+            <canvas id="tile" width="1000" height="1000"></canvas>
+          </div>
+          <div class="hint" style="margin-top:8px">Drag to move. Drag corners/edges to scale. Hold <b>R</b> (or Alt) while dragging a handle to rotate. Shift = 15° snap. Ctrl/⌘+D duplicate. Delete to remove. <b>Ctrl/⌘+Z</b> undo, <b>Ctrl/⌘+Shift+Z</b> redo. <b>X</b> flip H, <b>Y</b> flip V.</div>
+        </div>
+      </div>
     </div>
 
-    <div class="row">
-      <div class="left-column">
-        <div class="card">
-          <h2 style="margin:0 0 8px 0">Import Images</h2>
-          <input type="file" id="fileInput" accept="image/*" multiple />
-          <div class="hint" style="margin-top:6px">Double‑click a thumbnail to add it as a new layer.</div>
-          <div id="assetThumbs" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"></div>
-        </div>
-        <div class="card">
-          <h2 style="margin:0 0 8px 0">Layers</h2>
-          <div id="layers" class="layers"></div>
-          <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
-            <button id="duplicateBtn" class="btn ghost">Duplicate</button>
-            <button id="deleteBtn" class="btn secondary">Delete</button>
-            <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
-            <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
-            <button id="upBtn" class="btn ghost">Bring Forward</button>
-            <button id="downBtn" class="btn ghost">Send Backward</button>
+    <div id="repeat-grid-tool-container" style="display: none;">
+      <div class="row">
+        <div class="left-column">
+          <div class="card">
+            <h2 style="margin:0 0 8px 0">Image</h2>
+            <div class="drop-zone" id="rg-dropZone">
+                <div>Drop PNG/JPG here</div>
+                <div class="hint" style="margin-top: 5px;">or click to browse</div>
+                <div class="element-preview" id="rg-elementPreview"></div>
+            </div>
+            <input type="file" id="rg-fileInput" class="file-input" accept="image/*">
+          </div>
+          <div class="card">
+            <h2 style="margin:0 0 8px 0">Controls</h2>
+            <div class="control-row">
+                <label>Size:</label>
+                <input type="number" id="rg-elementSize" value="100" min="50" max="200" step="10">
+            </div>
+            <div class="control-row">
+                <label>Text:</label>
+                <input type="text" id="rg-elementText" value="Item" placeholder="Enter text">
+            </div>
+             <button class="btn" id="rg-repeatGridBtn" disabled>
+              Create Repeat Grid
+            </button>
+            <button class="btn secondary" id="rg-resetBtn" disabled style="margin-top: 8px;">
+                Reset Grid
+            </button>
+          </div>
+          <div class="card" id="rg-gridControls" style="display: none;">
+            <h2 style="margin:0 0 8px 0">Grid Info</h2>
+            <div class="grid-info" id="rg-gridInfo">
+                Columns: 1, Rows: 1<br>
+                Total Items: 1
+            </div>
+          </div>
+           <div class="card">
+            <h2 style="margin:0 0 8px 0">Export</h2>
+             <div style="display:flex; flex-direction: column; gap: 8px;">
+                <button class="btn ghost" id="rg-export-json-btn">Export as JSON</button>
+                <button class="btn ghost" id="rg-export-svg-btn">Export as SVG</button>
+                <button class="btn ghost" id="rg-import-btn">Import Grid</button>
+                <input type="file" id="rg-importFile" class="file-input" accept=".json">
+            </div>
           </div>
         </div>
         <div class="card">
-          <h2 style="margin:0 0 8px 0">Export</h2>
-          <div class="toolbar" style="gap:8px">
-            <label class="hint">Size</label>
-            <select id="exportSize">
-              <option value="512">512</option>
-              <option value="1000" selected>1000</option>
-              <option value="1024">1024</option>
-              <option value="2048">2048</option>
-              <option value="4096">4096</option>
-            </select>
-            <label class="hint">or custom</label>
-            <input id="exportCustom" type="number" min="64" max="8192" step="1" placeholder="custom px" style="width:120px" />
+           <h2 style="margin:0 0 8px 0">Repeat Grid Canvas</h2>
+           <div class="rg-canvas-container">
+              <div class="rg-canvas" id="rg-canvas">
+                  <div class="rg-original-element" id="rg-originalElement">
+                      Item
+                  </div>
+              </div>
           </div>
-          <div class="toolbar" style="margin-top:8px; gap:8px">
-            <label class="hint">File name</label>
-            <input id="fileName" type="text" placeholder="tile" value="tile" style="width:160px" />
-            <button id="exportBtn" class="btn">Export PNG</button>
-          </div>
-          <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
         </div>
       </div>
-      <div class="card">
-        <h2 style="margin:0 0 8px 0">Tile</h2>
-        <div id="canvasWrap">
-          <canvas id="tile" width="1000" height="1000"></canvas>
-        </div>
-        <div class="hint" style="margin-top:8px">Drag to move. Drag corners/edges to scale. Hold <b>R</b> (or Alt) while dragging a handle to rotate. Shift = 15° snap. Ctrl/⌘+D duplicate. Delete to remove. <b>Ctrl/⌘+Z</b> undo, <b>Ctrl/⌘+Shift+Z</b> redo. <b>X</b> flip H, <b>Y</b> flip V.</div>
-      </div>
+    </div>
     </div>
   </div>
 <script src="app.js"></script>
+<script src="repeat-grid.js"></script>
 </body>
 </html>
