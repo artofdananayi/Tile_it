@@ -542,7 +542,7 @@
                     item.className = 'repeated-item';
 
                     const x = startX + col * (gridData.elementSize + gridData.horizontalSpacing);
-                    const y = startY + row * (this.gridData.elementSize + this.gridData.verticalSpacing);
+                    const y = startY + row * (gridData.elementSize + gridData.verticalSpacing);
 
                     item.style.left = x + 'px';
                     item.style.top = y + 'px';
@@ -694,7 +694,7 @@
                 pattern.setAttribute('id', 'pattern');
                 pattern.setAttribute('patternUnits', 'userSpaceOnUse');
                 pattern.setAttribute('width', gridData.elementSize);
-                pattern.setAttribute('height', this.gridData.elementSize);
+                pattern.setAttribute('height', gridData.elementSize);
 
                 const image = document.createElementNS('http://www.w3.org/2000/svg', 'image');
                 image.setAttribute('href', currentImage);
