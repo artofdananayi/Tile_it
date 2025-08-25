@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repeat Grid Tool - Adobe XD Style</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
         :root {
           --bg:#0f1220;
           --panel:#151a2a;
@@ -20,20 +22,22 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8f8f8;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color:var(--text);
             display: flex;
             height: 100vh;
         }
 
         .toolbar {
             width: 250px;
-            background: #2c2c2c;
-            color: white;
+            background: var(--panel);
+            color: var(--text);
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            border-right:1px solid var(--border);
         }
 
         .canvas-container {
@@ -41,7 +45,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: #e8e8e8;
+            background: var(--bg);
             position: relative;
         }
 
@@ -78,7 +82,7 @@
         }
 
         .original-element.selected {
-            border: 2px solid #007acc;
+            border: 2px solid var(--accent);
             box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
         }
 
@@ -107,7 +111,7 @@
 
         .grid-handle {
             position: absolute;
-            background: #00d084;
+            background: var(--accent);
             border: 2px solid white;
             border-radius: 50%;
             width: 20px;
@@ -139,7 +143,7 @@
         .spacing-handle {
             position: absolute;
             background: rgba(0, 208, 132, 0.5);
-            border: 1px solid #00d084;
+            border: 1px solid var(--accent);
             cursor: pointer;
             z-index: 99;
         }
@@ -153,13 +157,14 @@
         }
 
         .btn {
-            background: #007acc;
-            color: white;
+            background: var(--accent);
+            color: var(--bg);
             border: none;
             padding: 10px 15px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
+            font-weight:500;
             transition: background 0.2s;
         }
 
@@ -173,7 +178,7 @@
         }
 
         .btn-success {
-            background: #00d084;
+            background: var(--accent);
         }
 
         .btn-success:hover {
@@ -193,19 +198,19 @@
         }
 
         .drop-zone {
-            border: 2px dashed #ccc;
+            border: 2px dashed var(--border);
             border-radius: 8px;
             padding: 20px;
             text-align: center;
-            color: #666;
+            color: var(--muted);
             margin-bottom: 15px;
             transition: all 0.2s;
         }
 
         .drop-zone:hover, .drop-zone.drag-over {
-            border-color: #007acc;
+            border-color: var(--accent);
             background: rgba(0, 122, 204, 0.05);
-            color: #007acc;
+            color: var(--accent);
         }
 
         .element-preview {
@@ -219,13 +224,13 @@
         }
 
         .controls-group {
-            border: 1px solid #444;
+            border: 1px solid var(--border);
             border-radius: 4px;
             padding: 15px;
         }
 
         .controls-group h3 {
-            color: #00d084;
+            color: var(--accent);
             margin-bottom: 10px;
             font-size: 14px;
         }
@@ -239,25 +244,25 @@
 
         .control-row label {
             font-size: 12px;
-            color: #ccc;
+            color: var(--muted);
             min-width: 60px;
         }
 
         .control-row input {
             flex: 1;
             padding: 4px 8px;
-            border: 1px solid #555;
-            background: #404040;
-            color: white;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
             border-radius: 3px;
         }
 
         .grid-info {
-            background: #333;
+            background: var(--bg);
             padding: 10px;
             border-radius: 4px;
             font-size: 12px;
-            color: #ccc;
+            color: var(--muted);
         }
     </style>
 </head>
