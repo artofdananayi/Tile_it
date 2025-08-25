@@ -1,11 +1,22 @@
 :root {
-  --bg: #1a1b26;
-  --panel: #151a2a;
-  --border: #2a2f45;
-  --text: #e7eaf3;
-  --muted: #9aa3ba;
-  --accent: #3b82f6;
-  --grid-bg: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 0v20M0 10h20" stroke-width="0.5" stroke="%232a2f45"/></svg>');
+  --grid-bg: #18181B;
+  --bg: #0F1220;
+  --overlay-shadow1: #17171A;
+  --overlay-shadow2: #1E1E21;
+  --panel: #27272A;
+  --panel-depth1: #28282C;
+  --panel-depth2: #28282B;
+  --panel-depth3: #262629;
+  --panel-depth4: #26262A;
+  --border: #1D1D20;
+  --divider1: #212125;
+  --divider2: #232327;
+  --panel-edge: #29292C;
+  --text: #F4F4F5;
+  --muted: #A1A1AA;
+  --text-edge1: #19191C;
+  --text-edge2: #1A1A1D;
+  --accent: #60A5FA;
 }
 
 .light-mode {
