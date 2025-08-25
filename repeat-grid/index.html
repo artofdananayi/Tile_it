@@ -349,6 +349,21 @@
             spacingIndex: -1
         };
 
+        const PROJECT_KEY = 'tileProject';
+        function gridSnapshot(){
+            return { ...gridData, image: currentImage };
+        }
+        function saveGridToLocal(){
+            const grid = gridSnapshot();
+            localStorage.setItem('gridConfig', JSON.stringify(grid));
+            let tile = null;
+            try{
+                const existing = JSON.parse(localStorage.getItem(PROJECT_KEY) || 'null');
+                tile = existing && existing.tile ? existing.tile : null;
+            }catch{}
+            localStorage.setItem(PROJECT_KEY, JSON.stringify({ tile, grid }));
+        }
+
         // Element references
         const canvas = document.getElementById('canvas');
         const originalElement = document.getElementById('originalElement');
@@ -411,6 +426,7 @@
                 elementPreview.style.backgroundPosition = 'center';
 
                 repeatGridBtn.disabled = false;
+                saveGridToLocal();
             };
             reader.readAsDataURL(file);
         }
@@ -640,6 +656,7 @@
                 H Spacing: ${Math.round(gridData.horizontalSpacing)}px<br>
                 V Spacing: ${Math.round(gridData.verticalSpacing)}px
             `;
+            saveGridToLocal();
         }
 
         function resetGrid() {
@@ -655,13 +672,18 @@
             repeatGridBtn.disabled = currentImage === null;
             resetBtn.disabled = true;
             gridControls.style.display = 'none';
+            saveGridToLocal();
         }
 
         function exportGrid() {
+            let tile = null;
+            try {
+                const existing = JSON.parse(localStorage.getItem(PROJECT_KEY) || 'null');
+                tile = existing && existing.tile ? existing.tile : null;
+            } catch {}
             const data = {
-                ...gridData,
-                hasImage: currentImage !== null,
-                image: currentImage,
+                tile,
+                grid: gridSnapshot(),
                 timestamp: new Date().toISOString()
             };
 
@@ -789,34 +811,36 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const data = JSON.parse(e.target.result);
+                    const parsed = JSON.parse(e.target.result);
+                    const proj = (parsed.grid || parsed.tile) ? parsed : { grid: parsed };
+                    if (proj.grid) {
+                        gridData = { ...gridData, ...proj.grid };
+                        document.getElementById('elementSize').value = proj.grid.elementSize || 100;
+                        document.getElementById('elementText').value = proj.grid.elementText || 'Item';
 
-                    // Restore grid data
-                    gridData = { ...data };
+                        if (proj.grid.image) {
+                            currentImage = proj.grid.image;
+                            originalElement.style.backgroundImage = `url(${currentImage})`;
+                            originalElement.style.backgroundSize = 'cover';
+                            originalElement.style.backgroundPosition = 'center';
+                            originalElement.textContent = '';
 
-                    // Update form values
-                    document.getElementById('elementSize').value = data.elementSize || 100;
-                    document.getElementById('elementText').value = data.elementText || 'Item';
+                            elementPreview.style.backgroundImage = `url(${currentImage})`;
+                            elementPreview.style.backgroundSize = 'cover';
+                            elementPreview.style.backgroundPosition = 'center';
 
-                    // Restore image if exists
-                    if (data.image) {
-                        currentImage = data.image;
-                        originalElement.style.backgroundImage = `url(${currentImage})`;
-                        originalElement.style.backgroundSize = 'cover';
-                        originalElement.style.backgroundPosition = 'center';
-                        originalElement.textContent = '';
+                            repeatGridBtn.disabled = false;
+                        }
 
-                        elementPreview.style.backgroundImage = `url(${currentImage})`;
-                        elementPreview.style.backgroundSize = 'cover';
-                        elementPreview.style.backgroundPosition = 'center';
-
-                        repeatGridBtn.disabled = false;
+                        updateElementSize();
+                        updateElementText();
                     }
-
-                    // Update element size and text
-                    updateElementSize();
-                    updateElementText();
-
+                    if (proj.tile) {
+                        localStorage.setItem(PROJECT_KEY, JSON.stringify({ tile: proj.tile, grid: gridSnapshot() }));
+                        localStorage.setItem('gridConfig', JSON.stringify(gridSnapshot()));
+                    } else {
+                        saveGridToLocal();
+                    }
                     alert('Grid imported successfully!');
                 } catch (error) {
                     alert('Error importing file: ' + error.message);
@@ -845,6 +869,33 @@
     </script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
+        const projectStr = localStorage.getItem(PROJECT_KEY);
+        if (projectStr) {
+          try {
+            const proj = JSON.parse(projectStr);
+            if (proj.grid) {
+              gridData = { ...gridData, ...proj.grid };
+              document.getElementById('elementSize').value = gridData.elementSize;
+              document.getElementById('elementText').value = gridData.elementText;
+              if (proj.grid.image) {
+                currentImage = proj.grid.image;
+                originalElement.style.backgroundImage = `url(${currentImage})`;
+                originalElement.style.backgroundSize = 'cover';
+                originalElement.style.backgroundPosition = 'center';
+                originalElement.textContent = '';
+
+                elementPreview.style.backgroundImage = `url(${currentImage})`;
+                elementPreview.style.backgroundSize = 'cover';
+                elementPreview.style.backgroundPosition = 'center';
+
+                repeatGridBtn.disabled = false;
+              }
+              updateElementSize();
+              updateElementText();
+              saveGridToLocal();
+            }
+          } catch {}
+        }
         const imageData = localStorage.getItem('imageToSendToGrid');
         if (imageData) {
           try {
@@ -859,6 +910,7 @@
             elementPreview.style.backgroundPosition = 'center';
 
             repeatGridBtn.disabled = false;
+            saveGridToLocal();
           } finally {
             localStorage.removeItem('imageToSendToGrid');
           }

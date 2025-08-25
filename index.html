@@ -125,6 +125,9 @@
             <h2 style="margin:0 0 8px 0">Tools</h2>
             <a href="./repeat-grid/index.html" id="repeatGridLink" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
             <button id="sendToGridBtn" class="btn" style="margin-top: 8px; width: 100%;">Send to Repeat Grid</button>
+            <button id="saveProjectBtn" class="btn secondary" style="margin-top: 8px; width: 100%;">Save Project</button>
+            <button id="loadProjectBtn" class="btn ghost" style="margin-top: 8px; width: 100%;">Load Project</button>
+            <input type="file" id="loadProjectInput" accept="application/json" style="display:none" />
         </div>
       </div>
     </div>
@@ -162,6 +165,11 @@
   const deleteBtn = document.getElementById('deleteBtn');
   const upBtn = document.getElementById('upBtn');
   const downBtn = document.getElementById('downBtn');
+  const saveProjectBtn = document.getElementById('saveProjectBtn');
+  const loadProjectBtn = document.getElementById('loadProjectBtn');
+  const loadProjectInput = document.getElementById('loadProjectInput');
+
+  const PROJECT_KEY = 'tileProject';
 
   // ====== Utils ======
   const uid = (()=>{ let i=1; return ()=> i++; })();
@@ -171,6 +179,10 @@
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
   function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value} }; }
   function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; Array.from(tilePresets.children).forEach(b=> b.classList.toggle('active', parseInt(b.dataset.size)===canvas.width)); updateZoom(); renderLayers(); draw(); updateUndoUI(); }
+
+  function getGridConfig(){ const g = localStorage.getItem('gridConfig'); return g ? JSON.parse(g) : null; }
+  function projectSnapshot(){ const data = { tile: snapshot(), grid: getGridConfig() }; localStorage.setItem(PROJECT_KEY, JSON.stringify(data)); return data; }
+  function applyProject(p){ if(p.tile) applySnapshot(p.tile); else applySnapshot(p); if(p.grid) localStorage.setItem('gridConfig', JSON.stringify(p.grid)); }
   function pushHistory(){ history.push(snapshot()); if(history.length>HISTORY_LIMIT) history.shift(); redoStack.length = 0; updateUndoUI(); }
   function updateUndoUI(){ undoBtn.disabled = history.length<=1; redoBtn.disabled = redoStack.length===0; }
   function undo(){ if(history.length<=1) return; const curr = history.pop(); redoStack.push(curr); const prev = history[history.length-1]; applySnapshot(prev); }
@@ -218,15 +230,15 @@
   exportCustom.addEventListener('input', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
   exportBtn.addEventListener('click', ()=>{ if(!layers.length){ alert('Add at least one layer.'); return; } const size = getExportSize() || 1000; const off=document.createElement('canvas'); off.width=size; off.height=size; const octx=off.getContext('2d'); if(bgToggle.checked){ octx.fillStyle=bgColorInput.value; octx.fillRect(0,0,size,size); } const sx=size/canvas.width, sy=size/canvas.height; for(const L of layers){ if(!L.visible) continue; const A=getAsset(L.assetId); if(!A) continue; const w=A.w*L.scale*sx, h=A.h*L.scale*sy; const x=L.x*sx, y=L.y*sy; const rad=L.rot*Math.PI/180; const pts=[[0,0],[-size,0],[size,0],[0,-size],[0,size],[-size,-size],[size,-size],[-size,size],[size,size]]; for(const [ox,oy] of pts){ octx.save(); octx.translate(x+ox,y+oy); octx.rotate(rad); octx.scale(L.flipH?-1:1, L.flipV?-1:1); octx.drawImage(A.img,-w/2,-h/2,w,h); octx.restore(); } } const a=document.createElement('a'); const base=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); a.href=off.toDataURL('image/png'); a.download=`${base}_${size}${bgToggle.checked?'':'_transparent'}.png`; a.click(); });
   fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); const cols=Math.ceil(Math.sqrt(files.length)); const rows=Math.ceil(files.length/cols); let i=0; const tileW=canvas.width, tileH=canvas.height; for(const a of assets.slice(-files.length)){ const cx = ((i%cols)+0.5)*(tileW/cols); const cy = (Math.floor(i/cols)+0.5)*(tileH/rows); const id=uid(); const s=Math.min(1, (tileW/cols)/(a.w*0.9)); layers.push({ id, assetId:a.id, name:a.name, x:cx, y:cy, scale:s, rot:0, visible:true, locked:false, flipH:false, flipV:false }); i++; } setSelected(layers.length ? [layers[layers.length-1].id] : []); renderLayers(); draw(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); pushHistory(); });
-  const savedDesign = localStorage.getItem('tileDesign');
-  if (savedDesign) {
+  const savedProject = localStorage.getItem(PROJECT_KEY);
+  if (savedProject) {
     try {
-      applySnapshot(JSON.parse(savedDesign));
+      applyProject(JSON.parse(savedProject));
       pushHistory();
     } catch (e) {
-      console.error('Failed to restore tile design', e);
+      console.error('Failed to restore project', e);
+      updateZoom(); renderLayers(); draw(); pushHistory();
     }
-    localStorage.removeItem('tileDesign');
   } else {
     updateZoom(); renderLayers(); draw(); pushHistory();
   }
@@ -251,12 +263,12 @@
     }
   });
   repeatGridLink.addEventListener('click', () => {
-    localStorage.setItem('tileDesign', JSON.stringify(snapshot()));
+    projectSnapshot();
   });
   sendToGridBtn.addEventListener('click', () => {
     const mainCanvas = document.getElementById('tile');
     if (mainCanvas) {
-      localStorage.setItem('tileDesign', JSON.stringify(snapshot()));
+      projectSnapshot();
       const exportSize = mainCanvas.width;
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = exportSize;
@@ -291,6 +303,34 @@
       localStorage.setItem('imageToSendToGrid', dataUrl);
       window.location.href = 'repeat-grid/index.html';
     }
+  });
+
+  saveProjectBtn.addEventListener('click', () => {
+    const data = projectSnapshot();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    const base = (fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${base}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  loadProjectBtn.addEventListener('click', ()=> loadProjectInput.click());
+  loadProjectInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const data = JSON.parse(reader.result);
+        applyProject(data);
+        pushHistory();
+      }catch(err){
+        alert('Invalid project file');
+      }
+    };
+    reader.readAsText(file);
   });
 </script>
 </body>
