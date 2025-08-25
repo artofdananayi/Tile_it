@@ -43,6 +43,15 @@
   #canvasWrap{ position:relative; width:100%; }
   #tile{ background:transparent; border:1px solid var(--border); border-radius:12px; display:block; }
   .hint{ color:var(--muted); font-size:12px }
+  #tileCard {
+    display: flex;
+    flex-direction: column;
+  }
+  #tileCard > #canvasWrap {
+    flex-grow: 1;
+    display: grid;
+    place-items: center;
+  }
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -96,12 +105,11 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="tileCard">
         <h2 style="margin:0 0 8px 0">Tile</h2>
         <div id="canvasWrap">
           <canvas id="tile" width="1000" height="1000"></canvas>
         </div>
-        <div class="hint" style="margin-top:8px">Drag to move. Drag corners/edges to scale. Hold <b>R</b> (or Alt) while dragging a handle to rotate. Shift = 15° snap. Ctrl/⌘+D duplicate. Delete to remove. <b>Ctrl/⌘+Z</b> undo, <b>Ctrl/⌘+Shift+Z</b> redo. <b>X</b> flip H, <b>Y</b> flip V.</div>
       </div>
 
       <div class="col-right">
