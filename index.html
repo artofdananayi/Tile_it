@@ -123,7 +123,7 @@
 
         <div class="card">
             <h2 style="margin:0 0 8px 0">Tools</h2>
-            <a href="./repeat-grid/index.html" target="_blank" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
+            <a href="./repeat-grid/index.html" id="repeatGridLink" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
             <button id="sendToGridBtn" class="btn" style="margin-top: 8px; width: 100%;">Send to Repeat Grid</button>
         </div>
       </div>
@@ -218,11 +218,23 @@
   exportCustom.addEventListener('input', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); });
   exportBtn.addEventListener('click', ()=>{ if(!layers.length){ alert('Add at least one layer.'); return; } const size = getExportSize() || 1000; const off=document.createElement('canvas'); off.width=size; off.height=size; const octx=off.getContext('2d'); if(bgToggle.checked){ octx.fillStyle=bgColorInput.value; octx.fillRect(0,0,size,size); } const sx=size/canvas.width, sy=size/canvas.height; for(const L of layers){ if(!L.visible) continue; const A=getAsset(L.assetId); if(!A) continue; const w=A.w*L.scale*sx, h=A.h*L.scale*sy; const x=L.x*sx, y=L.y*sy; const rad=L.rot*Math.PI/180; const pts=[[0,0],[-size,0],[size,0],[0,-size],[0,size],[-size,-size],[size,-size],[-size,size],[size,size]]; for(const [ox,oy] of pts){ octx.save(); octx.translate(x+ox,y+oy); octx.rotate(rad); octx.scale(L.flipH?-1:1, L.flipV?-1:1); octx.drawImage(A.img,-w/2,-h/2,w,h); octx.restore(); } } const a=document.createElement('a'); const base=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); a.href=off.toDataURL('image/png'); a.download=`${base}_${size}${bgToggle.checked?'':'_transparent'}.png`; a.click(); });
   fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); const cols=Math.ceil(Math.sqrt(files.length)); const rows=Math.ceil(files.length/cols); let i=0; const tileW=canvas.width, tileH=canvas.height; for(const a of assets.slice(-files.length)){ const cx = ((i%cols)+0.5)*(tileW/cols); const cy = (Math.floor(i/cols)+0.5)*(tileH/rows); const id=uid(); const s=Math.min(1, (tileW/cols)/(a.w*0.9)); layers.push({ id, assetId:a.id, name:a.name, x:cx, y:cy, scale:s, rot:0, visible:true, locked:false, flipH:false, flipV:false }); i++; } setSelected(layers.length ? [layers[layers.length-1].id] : []); renderLayers(); draw(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); pushHistory(); });
-  updateZoom(); renderLayers(); draw(); pushHistory();
+  const savedDesign = localStorage.getItem('tileDesign');
+  if (savedDesign) {
+    try {
+      applySnapshot(JSON.parse(savedDesign));
+      pushHistory();
+    } catch (e) {
+      console.error('Failed to restore tile design', e);
+    }
+    localStorage.removeItem('tileDesign');
+  } else {
+    updateZoom(); renderLayers(); draw(); pushHistory();
+  }
 </script>
 <script>
   const themeToggle = document.getElementById('themeToggle');
   const sendToGridBtn = document.getElementById('sendToGridBtn');
+  const repeatGridLink = document.getElementById('repeatGridLink');
   const body = document.body;
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme === 'light') {
@@ -238,9 +250,13 @@
       localStorage.setItem('theme', 'dark');
     }
   });
+  repeatGridLink.addEventListener('click', () => {
+    localStorage.setItem('tileDesign', JSON.stringify(snapshot()));
+  });
   sendToGridBtn.addEventListener('click', () => {
     const mainCanvas = document.getElementById('tile');
     if (mainCanvas) {
+      localStorage.setItem('tileDesign', JSON.stringify(snapshot()));
       const exportSize = mainCanvas.width;
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = exportSize;
@@ -273,7 +289,7 @@
       }
       const dataUrl = offscreenCanvas.toDataURL('image/png');
       localStorage.setItem('imageToSendToGrid', dataUrl);
-      window.open('repeat-grid/index.html', '_blank');
+      window.location.href = 'repeat-grid/index.html';
     }
   });
 </script>
