@@ -296,11 +296,11 @@
             </div>
         </div>
 
-        <button class="btn btn-success" id="repeatGridBtn" disabled>
+        <button class="btn btn-success" id="repeatGridBtn" disabled aria-label="Create repeat grid" title="Create Repeat Grid (Ctrl+G)">
             Create Repeat Grid
         </button>
 
-        <button class="btn" id="resetBtn" disabled>
+        <button class="btn" id="resetBtn" disabled aria-label="Reset grid" title="Reset Grid (Ctrl+R)">
             Reset Grid
         </button>
 
@@ -313,16 +313,16 @@
         </div>
 
         <div style="margin-top: auto;">
-            <button class="btn" onclick="saveAsPNG()">Save as PNG</button>
-            <button class="btn" onclick="saveAsSVG()">Save as SVG</button>
-            <button class="btn" onclick="document.getElementById('importFile').click()">Import</button>
+            <button class="btn" id="savePNGBtn" aria-label="Save grid as PNG" title="Save as PNG (Ctrl+S)">Save as PNG</button>
+            <button class="btn" id="saveSVGBtn" aria-label="Save grid as SVG" title="Save as SVG (Ctrl+Shift+S)">Save as SVG</button>
+            <button class="btn" id="importBtn" aria-label="Import grid configuration" title="Import (Ctrl+O)">Import</button>
             <input type="file" id="importFile" class="file-input" accept=".json">
         </div>
     </div>
 
     <div class="canvas-container">
         <div class="canvas" id="canvas">
-            <div class="original-element" id="originalElement">
+            <div class="original-element" id="originalElement" tabindex="0" aria-label="Grid element" title="Drag or use arrow keys to move; Shift+Arrow for 10px steps">
                 Item
             </div>
         </div>
@@ -371,6 +371,10 @@
         const fileInput = document.getElementById('fileInput');
         const repeatGridBtn = document.getElementById('repeatGridBtn');
         const resetBtn = document.getElementById('resetBtn');
+        const savePNGBtn = document.getElementById('savePNGBtn');
+        const saveSVGBtn = document.getElementById('saveSVGBtn');
+        const importBtn = document.getElementById('importBtn');
+        const importFile = document.getElementById('importFile');
         const elementPreview = document.getElementById('elementPreview');
         const gridControls = document.getElementById('gridControls');
         const gridInfo = document.getElementById('gridInfo');
@@ -459,6 +463,33 @@
         // Repeat Grid functionality
         repeatGridBtn.addEventListener('click', createRepeatGrid);
         resetBtn.addEventListener('click', resetGrid);
+        savePNGBtn.addEventListener('click', saveAsPNG);
+        saveSVGBtn.addEventListener('click', saveAsSVG);
+        importBtn.addEventListener('click', () => importFile.click());
+
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            if (e.ctrlKey || e.metaKey) {
+                if (k === 'g') { e.preventDefault(); if (!repeatGridBtn.disabled) repeatGridBtn.click(); }
+                if (k === 'r') { e.preventDefault(); if (!resetBtn.disabled) resetBtn.click(); }
+                if (k === 's') {
+                    e.preventDefault();
+                    if (e.shiftKey) saveSVGBtn.click(); else savePNGBtn.click();
+                }
+                if (k === 'o') { e.preventDefault(); importFile.click(); }
+            }
+            if (['arrowleft','arrowright','arrowup','arrowdown'].includes(k) && document.activeElement === originalElement) {
+                e.preventDefault();
+                const step = e.shiftKey ? 10 : 1;
+                const left = parseInt(originalElement.style.left || '50');
+                const top = parseInt(originalElement.style.top || '50');
+                if (k === 'arrowleft') originalElement.style.left = (left - step) + 'px';
+                if (k === 'arrowright') originalElement.style.left = (left + step) + 'px';
+                if (k === 'arrowup') originalElement.style.top = (top - step) + 'px';
+                if (k === 'arrowdown') originalElement.style.top = (top + step) + 'px';
+                if (isGridActive) updateGrid();
+            }
+        });
 
         function createRepeatGrid() {
             if (isGridActive) return;
@@ -804,7 +835,7 @@
         }
 
         // Import functionality
-        document.getElementById('importFile').addEventListener('change', function(e) {
+        importFile.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 

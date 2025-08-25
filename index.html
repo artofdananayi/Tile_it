@@ -54,13 +54,13 @@
     <div class="title">
       <h1 style="margin:0">Tile-it</h1>
       <div class="toolbar">
-        <button id="undoBtn" class="btn secondary" disabled>Undo</button>
-        <button id="redoBtn" class="btn secondary" disabled>Redo</button>
+        <button id="undoBtn" class="btn secondary" disabled aria-label="Undo" title="Undo (Ctrl+Z)">Undo</button>
+        <button id="redoBtn" class="btn secondary" disabled aria-label="Redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
         <div class="seg" id="tilePresets">
-          <button data-size="1000" class="active">1000</button>
-          <button data-size="1024">1024</button>
-          <button data-size="2048">2048</button>
-          <button data-size="4096">4096</button>
+          <button data-size="1000" class="active" aria-label="Set tile size to 1000 pixels" title="Set tile size to 1000px">1000</button>
+          <button data-size="1024" aria-label="Set tile size to 1024 pixels" title="Set tile size to 1024px">1024</button>
+          <button data-size="2048" aria-label="Set tile size to 2048 pixels" title="Set tile size to 2048px">2048</button>
+          <button data-size="4096" aria-label="Set tile size to 4096 pixels" title="Set tile size to 4096px">4096</button>
         </div>
         <label class="toolbar" style="gap:6px"><input id="bgToggle" type="checkbox" checked /> Background on</label>
         <input id="bgColor" type="color" value="#0f1220" />
@@ -81,12 +81,12 @@
           <h2 style="margin:0 0 8px 0">Layers</h2>
           <div id="layers" class="layers"></div>
           <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
-            <button id="duplicateBtn" class="btn ghost">Duplicate</button>
-            <button id="deleteBtn" class="btn secondary">Delete</button>
-            <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
-            <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
-            <button id="upBtn" class="btn ghost">Bring Forward</button>
-            <button id="downBtn" class="btn ghost">Send Backward</button>
+            <button id="duplicateBtn" class="btn ghost" aria-label="Duplicate layer" title="Duplicate layer (Ctrl+D)">Duplicate</button>
+            <button id="deleteBtn" class="btn secondary" aria-label="Delete layer" title="Delete layer (Del)">Delete</button>
+            <button id="flipHBtn" class="btn ghost" aria-label="Flip layer horizontally" title="Flip Horizontal (X)">Flip Horizontal</button>
+            <button id="flipVBtn" class="btn ghost" aria-label="Flip layer vertically" title="Flip Vertical (Y)">Flip Vertical</button>
+            <button id="upBtn" class="btn ghost" aria-label="Bring layer forward" title="Bring Forward (])">Bring Forward</button>
+            <button id="downBtn" class="btn ghost" aria-label="Send layer backward" title="Send Backward ([)">Send Backward</button>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@
       <div class="card" id="tileCard">
         <h2 style="margin:0 0 8px 0">Tile</h2>
         <div id="canvasWrap">
-          <canvas id="tile" width="1000" height="1000"></canvas>
+          <canvas id="tile" width="1000" height="1000" tabindex="0" aria-label="Tile canvas" title="Use arrow keys to move selected layer"></canvas>
         </div>
       </div>
 
@@ -116,18 +116,18 @@
           <div class="toolbar" style="margin-top:8px; gap:8px">
             <label class="hint">File name</label>
             <input id="fileName" type="text" placeholder="tile" value="tile" style="width:160px" />
-            <button id="exportBtn" class="btn">Export PNG</button>
-            <button id="repeatExportBtn" class="btn secondary">Repeat & Export</button>
+            <button id="exportBtn" class="btn" aria-label="Export as PNG">Export PNG</button>
+            <button id="repeatExportBtn" class="btn secondary" aria-label="Repeat pattern and export">Repeat & Export</button>
           </div>
           <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
         </div>
 
         <div class="card">
             <h2 style="margin:0 0 8px 0">Tools</h2>
-            <a href="./repeat-grid/index.html" id="repeatGridLink" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
-            <button id="sendToGridBtn" class="btn" style="margin-top: 8px; width: 100%;">Send to Repeat Grid</button>
-            <button id="saveProjectBtn" class="btn secondary" style="margin-top: 8px; width: 100%;">Save Project</button>
-            <button id="loadProjectBtn" class="btn ghost" style="margin-top: 8px; width: 100%;">Load Project</button>
+            <a href="./repeat-grid/index.html" id="repeatGridLink" class="btn" style="text-decoration: none; display: block; text-align: center;" aria-label="Open Repeat Grid Tool">Repeat Grid Tool</a>
+            <button id="sendToGridBtn" class="btn" style="margin-top: 8px; width: 100%;" aria-label="Send current tile to Repeat Grid">Send to Repeat Grid</button>
+            <button id="saveProjectBtn" class="btn secondary" style="margin-top: 8px; width: 100%;" aria-label="Save current project">Save Project</button>
+            <button id="loadProjectBtn" class="btn ghost" style="margin-top: 8px; width: 100%;" aria-label="Load project from file">Load Project</button>
             <input type="file" id="loadProjectInput" accept="application/json" style="display:none" />
         </div>
       </div>

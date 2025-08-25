@@ -17,3 +17,10 @@
   --accent: #0969da;
   --grid-bg: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 0v20M0 10h20" stroke-width="0.5" stroke="%23d9dce1"/></svg>');
 }
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
