@@ -4,17 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Repeat Grid Tool - Adobe XD Style</title>
+    <link rel="stylesheet" href="../styles/theme.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
-        :root {
-          --bg:#0f1220;
-          --panel:#151a2a;
-          --border:#2a2f45;
-          --text:#ffffff;
-          --muted:#9aa3ba;
-          --accent:#ffffff;
-        }
         * {
             margin: 0;
             padding: 0;
@@ -281,6 +274,7 @@
 <body>
     <div class="toolbar">
         <h2>Repeat Grid Tool</h2>
+        <label style="display:flex; align-items:center; gap:6px;"><input id="themeToggle" type="checkbox" /> Light Mode</label>
 
         <div class="drop-zone" id="dropZone">
             <div>Drop PNG/JPG here</div>
@@ -829,6 +823,24 @@
             };
             reader.readAsText(file);
         });
+    </script>
+    <script>
+      const themeToggle = document.getElementById('themeToggle');
+      const body = document.body;
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') {
+        body.classList.add('light-mode');
+        themeToggle.checked = true;
+      }
+      themeToggle.addEventListener('change', () => {
+        if (themeToggle.checked) {
+          body.classList.add('light-mode');
+          localStorage.setItem('theme', 'light');
+        } else {
+          body.classList.remove('light-mode');
+          localStorage.setItem('theme', 'dark');
+        }
+      });
     </script>
     <script>
       window.addEventListener('DOMContentLoaded', () => {
