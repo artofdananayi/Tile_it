@@ -4,15 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Tile-it</title>
+<link rel="stylesheet" href="styles/theme.css">
 <style>
-  :root {
-    --bg: #1a1b26; --panel: #151a2a; --border: #2a2f45; --text: #e7eaf3; --muted: #9aa3ba; --accent: #3b82f6;
-    --grid-bg: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 0v20M0 10h20" stroke-width="0.5" stroke="%232a2f45"/></svg>');
-  }
-  .light-mode {
-    --bg: #f0f2f5; --panel: #ffffff; --border: #d9dce1; --text: #1f2328; --muted: #656d76; --accent: #0969da;
-    --grid-bg: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 0v20M0 10h20" stroke-width="0.5" stroke="%23d9dce1"/></svg>');
-  }
   *{ box-sizing:border-box }
   body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background-color:var(--bg); background-image:var(--grid-bg); color:var(--text); }
   .wrap{ max-width:1200px; margin:0 auto; padding:16px; }
