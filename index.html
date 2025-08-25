@@ -38,6 +38,8 @@
   .hint{ color:var(--muted); font-size:12px }
   #tileCard { display: flex; flex-direction: column; }
   #tileCard > #canvasWrap { flex-grow: 1; display: grid; place-items: center; }
+  .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:1000 }
+  .overlay-content{ background:var(--panel); border:1px solid var(--border); color:var(--text); padding:24px; border-radius:12px; max-width:400px; }
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -65,6 +67,7 @@
         <label class="toolbar" style="gap:6px"><input id="bgToggle" type="checkbox" checked /> Background on</label>
         <input id="bgColor" type="color" value="#0f1220" />
         <label class="toolbar" style="gap:6px"><input id="themeToggle" type="checkbox" /> Light Mode</label>
+        <button id="helpBtn" class="btn secondary" title="Help">?</button>
       </div>
     </div>
 
@@ -134,7 +137,17 @@
     </div>
   </div>
 
-<script>
+  <div id="helpOverlay" class="overlay">
+    <div class="overlay-content">
+      <h2 style="margin-top:0">Getting Started</h2>
+      <p>Import images using the <strong>Import Images</strong> panel.</p>
+      <p>Manipulate and arrange your images in the <strong>Layers</strong> panel.</p>
+      <p>When you're ready, use the <strong>Export</strong> panel to save your tile.</p>
+      <button id="closeHelpBtn" class="btn secondary" style="margin-top:12px">Close</button>
+    </div>
+  </div>
+
+  <script>
   // ====== State ======
   const assets = [];
   let layers = [];
@@ -170,6 +183,9 @@
   const saveProjectBtn = document.getElementById('saveProjectBtn');
   const loadProjectBtn = document.getElementById('loadProjectBtn');
   const loadProjectInput = document.getElementById('loadProjectInput');
+  const helpBtn = document.getElementById('helpBtn');
+  const helpOverlay = document.getElementById('helpOverlay');
+  const closeHelpBtn = document.getElementById('closeHelpBtn');
 
   const PROJECT_KEY = 'tileProject';
 
@@ -335,6 +351,16 @@
       }
     };
     reader.readAsText(file);
+  });
+
+  helpBtn.addEventListener('click', () => {
+    helpOverlay.style.display = 'flex';
+  });
+  closeHelpBtn.addEventListener('click', () => {
+    helpOverlay.style.display = 'none';
+  });
+  helpOverlay.addEventListener('click', (e) => {
+    if (e.target === helpOverlay) helpOverlay.style.display = 'none';
   });
 </script>
 </body>
