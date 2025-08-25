@@ -138,6 +138,7 @@
         <div class="card">
             <h2 style="margin:0 0 8px 0">Tools</h2>
             <a href="./repeat-grid/index.html" target="_blank" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
+            <button id="sendToGridBtn" class="btn" style="margin-top: 8px; width: 100%;">Send to Repeat Grid</button>
         </div>
       </div>
     </div>
@@ -308,6 +309,7 @@
 
 <script>
   const themeToggle = document.getElementById('themeToggle');
+  const sendToGridBtn = document.getElementById('sendToGridBtn');
   const body = document.body;
 
   // Load saved theme
@@ -325,6 +327,50 @@
     } else {
       body.classList.remove('light-mode');
       localStorage.setItem('theme', 'dark');
+    }
+  });
+
+  sendToGridBtn.addEventListener('click', () => {
+    const mainCanvas = document.getElementById('tile');
+    if (mainCanvas) {
+      // We need to render the canvas with all layers before exporting
+      const exportSize = mainCanvas.width; // Use the actual canvas resolution
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = exportSize;
+      offscreenCanvas.height = exportSize;
+      const octx = offscreenCanvas.getContext('2d');
+
+      if (bgToggle.checked) {
+        octx.fillStyle = bgColorInput.value;
+        octx.fillRect(0, 0, exportSize, exportSize);
+      }
+
+      const sx = exportSize / mainCanvas.width;
+      const sy = exportSize / mainCanvas.height;
+
+      for (const L of layers) {
+        if (!L.visible) continue;
+        const A = getAsset(L.assetId);
+        if (!A) continue;
+        const w = A.w * L.scale * sx;
+        const h = A.h * L.scale * sy;
+        const x = L.x * sx;
+        const y = L.y * sy;
+        const rad = L.rot * Math.PI / 180;
+        const pts = [[0, 0], [-exportSize, 0], [exportSize, 0], [0, -exportSize], [0, exportSize], [-exportSize, -exportSize], [exportSize, -exportSize], [-exportSize, exportSize], [exportSize, exportSize]];
+        for (const [ox, oy] of pts) {
+          octx.save();
+          octx.translate(x + ox, y + oy);
+          octx.rotate(rad);
+          octx.scale(L.flipH ? -1 : 1, L.flipV ? -1 : 1);
+          octx.drawImage(A.img, -w / 2, -h / 2, w, h);
+          octx.restore();
+        }
+      }
+
+      const dataUrl = offscreenCanvas.toDataURL('image/png');
+      localStorage.setItem('imageToSendToGrid', dataUrl);
+      window.open('repeat-grid/index.html', '_blank');
     }
   });
 </script>
