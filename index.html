@@ -70,11 +70,6 @@
         <label class="toolbar" style="gap:6px"><input id="bgToggle" type="checkbox" checked /> Background on</label>
         <input id="bgColor" type="color" value="#0f1220" />
         <label class="toolbar" style="gap:6px"><input id="themeToggle" type="checkbox" /> Light Mode</label>
-        <div class="toolbar" style="gap:6px">
-          <label class="hint">Preview zoom</label>
-          <input id="zoom" type="range" min="20" max="100" step="5" value="20" />
-          <span id="zoomLbl" class="hint">20%</span>
-        </div>
       </div>
     </div>
 
@@ -159,8 +154,6 @@
   const tilePresets = document.getElementById('tilePresets');
   const bgToggle = document.getElementById('bgToggle');
   const bgColorInput = document.getElementById('bgColor');
-  const zoomInput = document.getElementById('zoom');
-  const zoomLbl = document.getElementById('zoomLbl');
   const exportSizeSel = document.getElementById('exportSize');
   const exportCustom = document.getElementById('exportCustom');
   const exportBtn = document.getElementById('exportBtn');
@@ -178,8 +171,8 @@
   function setSelected(ids){ selectedIds = Array.isArray(ids) ? ids : [ids]; currentWrap={ox:0,oy:0}; renderLayers(); draw(); }
 
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-  function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value}, zoom: parseInt(zoomInput.value) }; }
-  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; Array.from(tilePresets.children).forEach(b=> b.classList.toggle('active', parseInt(b.dataset.size)===canvas.width)); if(s.zoom){ zoomInput.value = s.zoom; } updateZoom(); renderLayers(); draw(); updateUndoUI(); }
+  function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value} }; }
+  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; Array.from(tilePresets.children).forEach(b=> b.classList.toggle('active', parseInt(b.dataset.size)===canvas.width)); updateZoom(); renderLayers(); draw(); updateUndoUI(); }
   function pushHistory(){ history.push(snapshot()); if(history.length>HISTORY_LIMIT) history.shift(); redoStack.length = 0; updateUndoUI(); }
   function updateUndoUI(){ undoBtn.disabled = history.length<=1; redoBtn.disabled = redoStack.length===0; }
   function undo(){ if(history.length<=1) return; const curr = history.pop(); redoStack.push(curr); const prev = history[history.length-1]; applySnapshot(prev); }
@@ -274,8 +267,12 @@
   bgColorInput.addEventListener('input', ()=>{ draw(); });
 
   // Zoom control (scales display only, not internal resolution)
-  function updateZoom(){ const z = parseInt(zoomInput.value)/100; const cssW = Math.max(280, Math.round(canvas.width * z)); canvas.style.width = cssW + 'px'; canvas.style.height = 'auto'; zoomLbl.textContent = Math.round(z*100) + '%'; }
-  zoomInput.addEventListener('input', updateZoom);
+  function updateZoom(){
+    const z = 0.45; // Fixed 45% zoom
+    const cssW = Math.max(280, Math.round(canvas.width * z));
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = 'auto';
+  }
 
   // Export
   function estimateTime(px){ const n = layers.length; const work = n * (px*px); if(work < 2e8) return 'instant'; if(work < 6e8) return '~0.5–1s'; if(work < 1.2e9) return '~1–2s'; return 'a few seconds'; }
