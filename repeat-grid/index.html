@@ -272,6 +272,10 @@
             font-size: 12px;
             color: var(--muted);
         }
+        .size-input {
+            width: 120px;
+            flex: 0 0 120px;
+        }
     </style>
 </head>
 <body>
@@ -289,11 +293,11 @@
             <h3>Element Size</h3>
             <div class="control-row">
                 <label>Size:</label>
-                <input type="number" id="elementSize" value="100" min="50" max="200" step="10">
+                <input type="number" id="elementSize" value="100" min="50" max="200" step="10" class="size-input">
             </div>
             <div class="control-row">
-                <label>Text:</label>
-                <input type="text" id="elementText" value="Item" placeholder="Enter text">
+                <label>Tile:</label>
+                <input type="text" id="elementText" value="Item" placeholder="Enter text" class="size-input">
             </div>
         </div>
 
@@ -314,8 +318,8 @@
         </div>
 
         <div style="margin-top: auto;">
-            <button class="btn" onclick="exportGrid()">Export as JSON</button>
-            <button class="btn" onclick="exportAsSVG()">Export as SVG</button>
+            <button class="btn" onclick="saveAsPNG()">Save as PNG</button>
+            <button class="btn" onclick="saveAsSVG()">Save as SVG</button>
             <button class="btn" onclick="document.getElementById('importFile').click()">Import</button>
             <input type="file" id="importFile" class="file-input" accept=".json">
         </div>
@@ -675,7 +679,52 @@
             URL.revokeObjectURL(url);
         }
 
-        function exportAsSVG() {
+        function saveAsPNG() {
+            const offscreenCanvas = document.createElement('canvas');
+            const ctx = offscreenCanvas.getContext('2d');
+
+            const itemWidth = gridData.elementSize;
+            const itemHeight = gridData.elementSize;
+            const totalWidth = gridData.columns * itemWidth;
+            const totalHeight = gridData.rows * itemHeight;
+
+            offscreenCanvas.width = totalWidth;
+            offscreenCanvas.height = totalHeight;
+
+            const img = new Image();
+            img.onload = () => {
+                for (let row = 0; row < gridData.rows; row++) {
+                    for (let col = 0; col < gridData.columns; col++) {
+                        const x = col * itemWidth;
+                        const y = row * itemHeight;
+                        if (currentImage) {
+                            ctx.drawImage(img, x, y, itemWidth, itemHeight);
+                        } else {
+                            ctx.fillStyle = '#007acc';
+                            ctx.fillRect(x, y, itemWidth, itemHeight);
+                            ctx.fillStyle = 'white';
+                            ctx.font = 'bold 16px sans-serif';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(gridData.elementText, x + itemWidth / 2, y + itemHeight / 2);
+                        }
+                    }
+                }
+                const dataUrl = offscreenCanvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = 'repeat-grid.png';
+                a.click();
+            };
+
+            if (currentImage) {
+                img.src = currentImage;
+            } else {
+                img.onload(); // Trigger the drawing logic directly if there's no image to load
+            }
+        }
+
+        function saveAsSVG() {
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', '700');
             svg.setAttribute('height', '700');
