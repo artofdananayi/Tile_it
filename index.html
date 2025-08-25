@@ -17,8 +17,8 @@
   body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; background-color:var(--bg); background-image:var(--grid-bg); color:var(--text); }
   .wrap{ max-width:1200px; margin:0 auto; padding:16px; }
   .title{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px }
-  .row{ display:grid; grid-template-columns: 320px 1fr; gap:16px }
-  .col-left{ display:flex; flex-direction:column; gap:16px; }
+  .row{ display:grid; grid-template-columns: 320px 1fr 320px; gap:16px }
+  .col-left, .col-right{ display:flex; flex-direction:column; gap:16px; }
   @media (max-width:980px){ .row{ grid-template-columns:1fr } }
   .card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px }
   .btn{ background:var(--accent); color:var(--bg); border:none; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600 }
@@ -94,7 +94,17 @@
             <button id="downBtn" class="btn ghost">Send Backward</button>
           </div>
         </div>
+      </div>
 
+      <div class="card">
+        <h2 style="margin:0 0 8px 0">Tile</h2>
+        <div id="canvasWrap">
+          <canvas id="tile" width="1000" height="1000"></canvas>
+        </div>
+        <div class="hint" style="margin-top:8px">Drag to move. Drag corners/edges to scale. Hold <b>R</b> (or Alt) while dragging a handle to rotate. Shift = 15° snap. Ctrl/⌘+D duplicate. Delete to remove. <b>Ctrl/⌘+Z</b> undo, <b>Ctrl/⌘+Shift+Z</b> redo. <b>X</b> flip H, <b>Y</b> flip V.</div>
+      </div>
+
+      <div class="col-right">
         <div class="card">
           <h2 style="margin:0 0 8px 0">Export</h2>
           <div class="toolbar" style="gap:8px">
@@ -121,14 +131,6 @@
             <h2 style="margin:0 0 8px 0">Tools</h2>
             <a href="./repeat-grid/index.html" target="_blank" class="btn" style="text-decoration: none; display: block; text-align: center;">Repeat Grid Tool</a>
         </div>
-      </div>
-
-      <div class="card">
-        <h2 style="margin:0 0 8px 0">Tile</h2>
-        <div id="canvasWrap">
-          <canvas id="tile" width="1000" height="1000"></canvas>
-        </div>
-        <div class="hint" style="margin-top:8px">Drag to move. Drag corners/edges to scale. Hold <b>R</b> (or Alt) while dragging a handle to rotate. Shift = 15° snap. Ctrl/⌘+D duplicate. Delete to remove. <b>Ctrl/⌘+Z</b> undo, <b>Ctrl/⌘+Shift+Z</b> redo. <b>X</b> flip H, <b>Y</b> flip V.</div>
       </div>
     </div>
   </div>
