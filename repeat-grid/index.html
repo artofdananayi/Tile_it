@@ -13,7 +13,7 @@
           --border:#2a2f45;
           --text:#ffffff;
           --muted:#9aa3ba;
-          --accent:#ffffff;
+          --accent:#10b981;
         }
         * {
             margin: 0;
@@ -38,13 +38,6 @@
             flex-direction: column;
             gap: 15px;
             border-right:1px solid var(--border);
-        }
-
-        .toolbar h2 {
-            color: var(--accent);
-            margin-bottom: 20px;
-            font-weight: 500;
-            font-size: 1.1em;
         }
 
         .canvas-container {
@@ -89,8 +82,8 @@
         }
 
         .original-element.selected {
-            border: 2px solid var(--muted);
-            box-shadow: 0 0 0 2px rgba(154, 163, 186, 0.3);
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 122, 204, 0.3);
         }
 
         .repeat-grid {
@@ -119,7 +112,7 @@
         .grid-handle {
             position: absolute;
             background: var(--accent);
-            border: 2px solid var(--border);
+            border: 2px solid white;
             border-radius: 50%;
             width: 20px;
             height: 20px;
@@ -129,6 +122,7 @@
         }
 
         .grid-handle:hover {
+            background: #00b570;
             transform: scale(1.1);
         }
 
@@ -148,8 +142,8 @@
 
         .spacing-handle {
             position: absolute;
-            background: rgba(154, 163, 186, 0.2);
-            border: 1px solid var(--muted);
+            background: rgba(0, 208, 132, 0.5);
+            border: 1px solid var(--accent);
             cursor: pointer;
             z-index: 99;
         }
@@ -175,13 +169,11 @@
         }
 
         .btn:hover {
-            background: var(--muted);
-            color: var(--panel);
+            background: #005999;
         }
 
         .btn:disabled {
-            background: var(--border);
-            color: var(--muted);
+            background: #666;
             cursor: not-allowed;
         }
 
@@ -190,7 +182,7 @@
         }
 
         .btn-success:hover {
-            background: var(--muted);
+            background: #00b570;
         }
 
         .btn-danger {
@@ -217,7 +209,7 @@
 
         .drop-zone:hover, .drop-zone.drag-over {
             border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 122, 204, 0.05);
             color: var(--accent);
         }
 
@@ -280,7 +272,7 @@
 </head>
 <body>
     <div class="toolbar">
-        <h2>Repeat Grid Tool</h2>
+        <h2 style="color: #00d084; margin-bottom: 20px;">Repeat Grid Tool</h2>
 
         <div class="drop-zone" id="dropZone">
             <div>Drop PNG/JPG here</div>
