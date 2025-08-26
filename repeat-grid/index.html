@@ -315,8 +315,6 @@
         <div style="margin-top: auto;">
             <button class="btn" onclick="saveAsPNG()">Save as PNG</button>
             <button class="btn" onclick="saveAsSVG()">Save as SVG</button>
-            <button class="btn" onclick="document.getElementById('importFile').click()">Import</button>
-            <input type="file" id="importFile" class="file-input" accept=".json">
         </div>
     </div>
 
@@ -803,51 +801,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Import functionality
-        document.getElementById('importFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const parsed = JSON.parse(e.target.result);
-                    const proj = (parsed.grid || parsed.tile) ? parsed : { grid: parsed };
-                    if (proj.grid) {
-                        gridData = { ...gridData, ...proj.grid };
-                        document.getElementById('elementSize').value = proj.grid.elementSize || 100;
-                        document.getElementById('elementText').value = proj.grid.elementText || 'Item';
-
-                        if (proj.grid.image) {
-                            currentImage = proj.grid.image;
-                            originalElement.style.backgroundImage = `url(${currentImage})`;
-                            originalElement.style.backgroundSize = 'cover';
-                            originalElement.style.backgroundPosition = 'center';
-                            originalElement.textContent = '';
-
-                            elementPreview.style.backgroundImage = `url(${currentImage})`;
-                            elementPreview.style.backgroundSize = 'cover';
-                            elementPreview.style.backgroundPosition = 'center';
-
-                            repeatGridBtn.disabled = false;
-                        }
-
-                        updateElementSize();
-                        updateElementText();
-                    }
-                    if (proj.tile) {
-                        localStorage.setItem(PROJECT_KEY, JSON.stringify({ tile: proj.tile, grid: gridSnapshot() }));
-                        localStorage.setItem('gridConfig', JSON.stringify(gridSnapshot()));
-                    } else {
-                        saveGridToLocal();
-                    }
-                    alert('Grid imported successfully!');
-                } catch (error) {
-                    alert('Error importing file: ' + error.message);
-                }
-            };
-            reader.readAsText(file);
-        });
     </script>
     <script>
       const themeToggle = document.getElementById('themeToggle');
