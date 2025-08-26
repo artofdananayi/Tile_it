@@ -1,0 +1,16 @@
+{
+  "name": "tile_it",
+  "version": "1.0.0",
+  "description": "Tile-it PWA app for creating tile image for seamless patterns",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
