@@ -52,7 +52,7 @@
         .canvas {
             width: 700px;
             height: 700px;
-            background: white;
+            background: transparent;
             border: 2px solid #ddd;
             position: relative;
             overflow: visible;
@@ -705,6 +705,7 @@
 
             offscreenCanvas.width = totalWidth;
             offscreenCanvas.height = totalHeight;
+            ctx.clearRect(0, 0, totalWidth, totalHeight);
 
             const img = new Image();
             img.onload = () => {
@@ -740,15 +741,17 @@
         }
 
         function saveAsSVG() {
+            const totalWidth = gridData.columns * gridData.elementSize;
+            const totalHeight = gridData.rows * gridData.elementSize;
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', '700');
-            svg.setAttribute('height', '700');
-            svg.setAttribute('viewBox', '0 0 700 700');
+            svg.setAttribute('width', totalWidth);
+            svg.setAttribute('height', totalHeight);
+            svg.setAttribute('viewBox', `0 0 ${totalWidth} ${totalHeight}`);
 
             for (let row = 0; row < gridData.rows; row++) {
                 for (let col = 0; col < gridData.columns; col++) {
-                    const x = 50 + col * gridData.elementSize;
-                    const y = 50 + row * gridData.elementSize;
+                    const x = col * gridData.elementSize;
+                    const y = row * gridData.elementSize;
 
                     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                     rect.setAttribute('x', x);
