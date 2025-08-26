@@ -17,3 +17,9 @@
   --accent: #0969da;
   --grid-bg: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path d="M10 0v20M0 10h20" stroke-width="0.5" stroke="%23d9dce1"/></svg>');
 }
+
+.transparent-bg {
+  background-color: var(--panel);
+  background-image: repeating-conic-gradient(var(--border) 0 25%, transparent 0 50%);
+  background-size: 16px 16px;
+}
