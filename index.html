@@ -40,7 +40,7 @@
   #tileCard > #canvasWrap { flex-grow: 1; display: grid; place-items: center; }
   .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:1000 }
   .overlay-content{ background:var(--panel); border:1px solid var(--border); color:var(--text); padding:24px; border-radius:12px; max-width:400px; }
-  #patternPreview{ width:100%; height:160px; border:1px solid var(--border); border-radius:10px; background-color:var(--bg); background-repeat:repeat; margin-top:8px }
+  #patternPreview{ width:100%; height:160px; border:1px solid var(--border); border-radius:10px; background-color:var(--bg); background-repeat:no-repeat; margin-top:8px }
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -118,7 +118,17 @@
             <button id="repeatExportBtn" class="btn secondary">Repeat & Export</button>
           </div>
           <div id="estTime" class="hint" style="margin-top:6px">Estimated time: instant</div>
-          <div id="patternPreview"></div>
+          <div id="previewContainer" style="display:flex; align-items:center; gap:8px;">
+            <div style="flex:1;">
+              <div id="patternPreview"></div>
+              <input id="repeatX" type="range" min="1" max="10" value="3" style="width:100%; margin-top:4px;" />
+            </div>
+            <input id="repeatY" type="range" min="1" max="10" value="3" style="writing-mode: bt-lr; -webkit-appearance: slider-vertical; width:20px; height:160px;" />
+          </div>
+          <div class="toolbar" style="gap:8px; margin-top:8px">
+            <label class="hint">X</label><input id="repeatXNum" type="number" min="1" max="10" value="3" style="width:60px" />
+            <label class="hint">Y</label><input id="repeatYNum" type="number" min="1" max="10" value="3" style="width:60px" />
+          </div>
         </div>
 
         <div class="card">
@@ -169,6 +179,10 @@
   const fileNameInput = document.getElementById('fileName');
   const estTime = document.getElementById('estTime');
   const patternPreview = document.getElementById('patternPreview');
+    const repeatXRange = document.getElementById('repeatX');
+    const repeatYRange = document.getElementById('repeatY');
+    const repeatXNum = document.getElementById('repeatXNum');
+    const repeatYNum = document.getElementById('repeatYNum');
   const undoBtn = document.getElementById('undoBtn');
   const redoBtn = document.getElementById('redoBtn');
   const flipHBtn = document.getElementById('flipHBtn');
@@ -194,8 +208,8 @@
   function getLayer(id){ return layers.find(l=>l.id===id); }
   function setSelected(ids){ selectedIds = Array.isArray(ids) ? ids : [ids]; currentWrap={ox:0,oy:0}; renderLayers(); draw(); }
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
-  function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value} }; }
-  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; canvasWrap.classList.toggle('transparent-bg', !bgToggle.checked); layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; updateZoom(); renderLayers(); draw(); updateUndoUI(); }
+  function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value}, repeat:{x:getRepeatX(), y:getRepeatY()} }; }
+  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; canvasWrap.classList.toggle('transparent-bg', !bgToggle.checked); layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; repeatXRange.value = (s.repeat && s.repeat.x) || repeatXRange.value; repeatYRange.value = (s.repeat && s.repeat.y) || repeatYRange.value; syncRepeatInputs(); updateZoom(); renderLayers(); draw(); updateUndoUI(); }
 
   function getGridConfig(){ const g = localStorage.getItem('gridConfig'); return g ? JSON.parse(g) : null; }
   function projectSnapshot(){ const data = { tile: snapshot(), grid: getGridConfig() }; localStorage.setItem(PROJECT_KEY, JSON.stringify(data)); return data; }
@@ -242,12 +256,20 @@
   function updateZoom(){ const z = 0.45; const cssW = Math.max(280, Math.round(canvas.width * z)); canvas.style.width = cssW + 'px'; canvas.style.height = 'auto'; }
   function estimateTime(px){ const n = layers.length; const work = n * (px*px); if(work < 2e8) return 'instant'; if(work < 6e8) return '~0.5–1s'; if(work < 1.2e9) return '~1–2s'; return 'a few seconds'; }
   function getExportSize(){ const custom = parseInt(exportCustom.value); return (custom && custom>0) ? custom : parseInt(exportSizeSel.value); }
+    function getRepeatX(){ return parseInt(repeatXRange.value,10); }
+    function getRepeatY(){ return parseInt(repeatYRange.value,10); }
+    function syncRepeatInputs(){ repeatXNum.value=repeatXRange.value; repeatYNum.value=repeatYRange.value; }
+    syncRepeatInputs();
+    repeatXRange.addEventListener('input', ()=>{ repeatXNum.value=repeatXRange.value; updatePatternPreview(); projectSnapshot(); });
+    repeatXNum.addEventListener('input', ()=>{ repeatXRange.value=repeatXNum.value; updatePatternPreview(); projectSnapshot(); });
+    repeatYRange.addEventListener('input', ()=>{ repeatYNum.value=repeatYRange.value; updatePatternPreview(); projectSnapshot(); });
+    repeatYNum.addEventListener('input', ()=>{ repeatYRange.value=repeatYNum.value; updatePatternPreview(); projectSnapshot(); });
   exportSizeSel.addEventListener('change', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); updatePatternPreview(); });
   exportCustom.addEventListener('input', ()=>{ estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); updatePatternPreview(); });
   function drawTileToCanvas(size){ const off=document.createElement('canvas'); off.width=size; off.height=size; const octx=off.getContext('2d'); if(bgToggle.checked){ octx.fillStyle=bgColorInput.value; octx.fillRect(0,0,size,size); } const sx=size/canvas.width, sy=size/canvas.height; for(const L of layers){ if(!L.visible) continue; const A=getAsset(L.assetId); if(!A) continue; const w=A.w*L.scale*sx, h=A.h*L.scale*sy; const x=L.x*sx, y=L.y*sy; const rad=L.rot*Math.PI/180; const pts=[[0,0],[-size,0],[size,0],[0,-size],[0,size],[-size,-size],[size,-size],[-size,size],[size,size]]; for(const [ox,oy] of pts){ octx.save(); octx.translate(x+ox,y+oy); octx.rotate(rad); octx.scale(L.flipH?-1:1, L.flipV?-1:1); octx.drawImage(A.img,-w/2,-h/2,w,h); octx.restore(); } } return off; }
-  function updatePatternPreview(){ const size=Math.min(128, getExportSize()); const off=drawTileToCanvas(size); patternPreview.style.backgroundImage=`url(${off.toDataURL('image/png')})`; patternPreview.style.backgroundSize=`${size}px ${size}px`; }
+  function updatePatternPreview(){ const size=Math.min(128, getExportSize()); const tile=drawTileToCanvas(size); const rx=getRepeatX(), ry=getRepeatY(); const grid=document.createElement('canvas'); grid.width=size*rx; grid.height=size*ry; const gctx=grid.getContext('2d'); for(let y=0;y<ry;y++){ for(let x=0;x<rx;x++){ gctx.drawImage(tile,x*size,y*size); } } patternPreview.style.backgroundImage=`url(${grid.toDataURL('image/png')})`; patternPreview.style.backgroundSize='contain'; patternPreview.style.backgroundRepeat='no-repeat'; }
   exportBtn.addEventListener('click', ()=>{ if(!layers.length){ alert('Add at least one layer.'); return; } const size = getExportSize() || 1000; const off=drawTileToCanvas(size); const a=document.createElement('a'); const base=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); a.href=off.toDataURL('image/png'); a.download=`${base}_${size}${bgToggle.checked?'':'_transparent'}.png`; a.click(); });
-  repeatExportBtn.addEventListener('click', ()=>{ if(!layers.length){ alert('Add at least one layer.'); return; } const size=getExportSize()||1000; const reps=parseInt(prompt('Repeat count per side? (3 for 3x3)','3'),10); if(!reps||reps<1) return; const format=(prompt('Export format? (png/svg)','png')||'png').toLowerCase(); const baseCanvas=drawTileToCanvas(size); const baseName=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); if(format==='svg'){ const total=size*reps; const imgData=baseCanvas.toDataURL('image/png'); let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${total}" viewBox="0 0 ${total} ${total}">`; for(let r=0;r<reps;r++){ for(let c=0;c<reps;c++){ svg+=`<image x="${c*size}" y="${r*size}" width="${size}" height="${size}" href="${imgData}" />`; }} svg+='</svg>'; const blob=new Blob([svg],{type:'image/svg+xml'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${baseName}_repeat_${reps}.svg`; a.click(); URL.revokeObjectURL(url); } else { const total=size*reps; const grid=document.createElement('canvas'); grid.width=total; grid.height=total; const gctx=grid.getContext('2d'); for(let r=0;r<reps;r++){ for(let c=0;c<reps;c++){ gctx.drawImage(baseCanvas,c*size,r*size); }} const a=document.createElement('a'); a.href=grid.toDataURL('image/png'); a.download=`${baseName}_repeat_${reps}.png`; a.click(); } });
+  repeatExportBtn.addEventListener('click', ()=>{ if(!layers.length){ alert('Add at least one layer.'); return; } const size=getExportSize()||1000; const repsX=getRepeatX(); const repsY=getRepeatY(); const format=(prompt('Export format? (png/svg)','png')||'png').toLowerCase(); const baseCanvas=drawTileToCanvas(size); const baseName=(fileNameInput.value||'tile').replace(/[^a-z0-9_\-]+/gi,'_'); if(format==='svg'){ const totalW=size*repsX; const totalH=size*repsY; const imgData=baseCanvas.toDataURL('image/png'); let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="${totalH}" viewBox="0 0 ${totalW} ${totalH}">`; for(let r=0;r<repsY;r++){ for(let c=0;c<repsX;c++){ svg+=`<image x="${c*size}" y="${r*size}" width="${size}" height="${size}" href="${imgData}" />`; }} svg+='</svg>'; const blob=new Blob([svg],{type:'image/svg+xml'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${baseName}_repeat_${repsX}x${repsY}.svg`; a.click(); URL.revokeObjectURL(url); } else { const totalW=size*repsX; const totalH=size*repsY; const grid=document.createElement('canvas'); grid.width=totalW; grid.height=totalH; const gctx=grid.getContext('2d'); for(let r=0;r<repsY;r++){ for(let c=0;c<repsX;c++){ gctx.drawImage(baseCanvas,c*size,r*size); }} const a=document.createElement('a'); a.href=grid.toDataURL('image/png'); a.download=`${baseName}_repeat_${repsX}x${repsY}.png`; a.click(); } });
   fileInput.addEventListener('change', async (e)=>{ const files=Array.from(e.target.files||[]); if(!files.length) return; for(const f of files){ const url=URL.createObjectURL(f); const img=new Image(); img.crossOrigin='anonymous'; img.src=url; await (img.decode?img.decode():new Promise(res=>{ img.onload=res; })); const id=uid(); assets.push({ id, img, w: img.naturalWidth||img.width, h: img.naturalHeight||img.height, name:f.name }); } renderAssets(); const cols=Math.ceil(Math.sqrt(files.length)); const rows=Math.ceil(files.length/cols); let i=0; const tileW=canvas.width, tileH=canvas.height; for(const a of assets.slice(-files.length)){ const cx = ((i%cols)+0.5)*(tileW/cols); const cy = (Math.floor(i/cols)+0.5)*(tileH/rows); const id=uid(); const s=Math.min(1, (tileW/cols)/(a.w*0.9)); layers.push({ id, assetId:a.id, name:a.name, x:cx, y:cy, scale:s, rot:0, visible:true, locked:false, flipH:false, flipV:false }); i++; } setSelected(layers.length ? [layers[layers.length-1].id] : []); renderLayers(); draw(); estTime.textContent = 'Estimated time: ' + estimateTime(getExportSize()); pushHistory(); });
   const savedProject = localStorage.getItem(PROJECT_KEY);
   if (savedProject) {
