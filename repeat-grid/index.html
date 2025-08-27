@@ -852,25 +852,6 @@
             }
           } catch {}
         }
-        const imageData = localStorage.getItem('imageToSendToGrid');
-        if (imageData) {
-          try {
-            currentImage = imageData;
-            originalElement.style.backgroundImage = `url(${currentImage})`;
-            originalElement.style.backgroundSize = 'cover';
-            originalElement.style.backgroundPosition = 'center';
-            originalElement.textContent = '';
-
-            elementPreview.style.backgroundImage = `url(${currentImage})`;
-            elementPreview.style.backgroundSize = 'cover';
-            elementPreview.style.backgroundPosition = 'center';
-
-            repeatGridBtn.disabled = false;
-            saveGridToLocal();
-          } finally {
-            localStorage.removeItem('imageToSendToGrid');
-          }
-        }
       });
     </script>
 </body>
