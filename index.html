@@ -33,8 +33,8 @@
   .layer.selected{ background:var(--bg); outline:1px solid var(--accent) }
   .layer.locked{ opacity:0.7 }
   .drag-handle{ cursor:grab; }
-  #canvasWrap{ position:relative; width:100%; }
-  #tile{ background:transparent; border:1px solid var(--border); border-radius:12px; display:block; }
+  #canvasWrap{ position:relative; width:100%; overflow:hidden; border-radius:12px; }
+  #tile{ background-color:transparent; border:1px solid var(--border); border-radius:12px; display:block; }
   .hint{ color:var(--muted); font-size:12px }
   #tileCard { display: flex; flex-direction: column; }
   #tileCard > #canvasWrap { flex-grow: 1; display: grid; place-items: center; }
@@ -92,7 +92,7 @@
       <div class="card" id="tileCard">
         <h2 style="margin:0 0 8px 0">Tile</h2>
         <div id="canvasWrap">
-          <canvas id="tile" width="1000" height="1000"></canvas>
+          <canvas id="tile" class="transparent-bg" width="1000" height="1000"></canvas>
         </div>
       </div>
 
@@ -182,7 +182,7 @@
   const helpOverlay = document.getElementById('helpOverlay');
   const closeHelpBtn = document.getElementById('closeHelpBtn');
 
-  canvasWrap.classList.toggle('transparent-bg', !bgToggle.checked);
+  canvas.classList.toggle('transparent-bg', !bgToggle.checked);
 
   const PROJECT_KEY = 'tileProject';
 
@@ -193,7 +193,7 @@
   function setSelected(ids){ selectedIds = Array.isArray(ids) ? ids : [ids]; currentWrap={ox:0,oy:0}; renderLayers(); draw(); }
   function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
   function snapshot(){ return { layers: deepClone(layers), selectedIds: deepClone(selectedIds), canvasSize:{w:canvas.width,h:canvas.height}, bg:{show:bgToggle.checked, color:bgColorInput.value} }; }
-  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; canvasWrap.classList.toggle('transparent-bg', !bgToggle.checked); layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; updateZoom(); renderLayers(); draw(); updateUndoUI(); }
+  function applySnapshot(s){ canvas.width = s.canvasSize.w; canvas.height = s.canvasSize.h; bgToggle.checked = !!s.bg.show; bgColorInput.value = s.bg.color; canvas.classList.toggle('transparent-bg', !bgToggle.checked); layers = deepClone(s.layers); selectedIds = s.selectedIds || []; currentWrap={ox:0,oy:0}; updateZoom(); renderLayers(); draw(); updateUndoUI(); }
 
   function getGridConfig(){ const g = localStorage.getItem('gridConfig'); return g ? JSON.parse(g) : null; }
   function projectSnapshot(){ const data = { tile: snapshot(), grid: getGridConfig() }; localStorage.setItem(PROJECT_KEY, JSON.stringify(data)); return data; }
@@ -234,7 +234,7 @@
   redoBtn.addEventListener('click', redo);
   flipHBtn.addEventListener('click', ()=>{ const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(!top) return; top.flipH=!top.flipH; renderLayers(); draw(); pushHistory(); });
   flipVBtn.addEventListener('click', ()=>{ const top = selectedIds.length ? getLayer(selectedIds[selectedIds.length-1]) : null; if(!top) return; top.flipV=!top.flipV; renderLayers(); draw(); pushHistory(); });
-  bgToggle.addEventListener('change', ()=>{ canvasWrap.classList.toggle('transparent-bg', !bgToggle.checked); draw(); pushHistory(); });
+  bgToggle.addEventListener('change', ()=>{ canvas.classList.toggle('transparent-bg', !bgToggle.checked); draw(); pushHistory(); });
   bgColorInput.addEventListener('change', ()=>{ draw(); pushHistory(); });
   bgColorInput.addEventListener('input', ()=>{ draw(); });
   function updateZoom(){ const z = 0.45; const cssW = Math.max(280, Math.round(canvas.width * z)); canvas.style.width = cssW + 'px'; canvas.style.height = 'auto'; }

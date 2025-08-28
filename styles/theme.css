@@ -19,7 +19,7 @@
 }
 
 .transparent-bg {
-  background-color: var(--panel);
+  background-clip: padding-box;
   background-image: repeating-conic-gradient(var(--border) 0 25%, transparent 0 50%);
   background-size: 16px 16px;
 }
