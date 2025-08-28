@@ -20,6 +20,11 @@
 
 .transparent-bg {
   background-color: var(--panel);
-  background-image: repeating-conic-gradient(var(--border) 0 25%, transparent 0 50%);
-  background-size: 16px 16px;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, #fff 25%, #fff 50%, #ccc 50%, #ccc 75%, #fff 75%, #fff),
+    linear-gradient(45deg, #ccc 25%, #fff 25%, #fff 50%, #ccc 50%, #ccc 75%, #fff 75%, #fff);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  background-origin: border-box;
+  background-clip: padding-box;
 }
