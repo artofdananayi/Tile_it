@@ -22,4 +22,11 @@
   background-color: var(--panel);
   background-image: repeating-conic-gradient(var(--border) 0 25%, transparent 0 50%);
   background-size: 16px 16px;
+  background-clip: padding-box;
+}
+
+#canvasWrap {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
 }
