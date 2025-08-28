@@ -78,13 +78,19 @@
         <div class="card">
           <h2 style="margin:0 0 8px 0">Layers</h2>
           <div id="layers" class="layers"></div>
-          <div class="toolbar" style="margin-top:8px; flex-wrap:wrap">
-            <button id="duplicateBtn" class="btn ghost">Duplicate</button>
-            <button id="deleteBtn" class="btn secondary">Delete</button>
-            <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
-            <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
-            <button id="upBtn" class="btn ghost">Bring Forward</button>
-            <button id="downBtn" class="btn ghost">Send Backward</button>
+          <div class="toolbar" style="margin-top:8px; flex-direction:column; gap:8px">
+            <div class="toolbar" style="gap:8px">
+              <button id="duplicateBtn" class="btn ghost">Duplicate</button>
+              <button id="deleteBtn" class="btn secondary">Delete</button>
+            </div>
+            <div class="toolbar" style="gap:8px">
+              <button id="flipVBtn" class="btn ghost" title="Flip Vertical (Y)">Flip V</button>
+              <button id="flipHBtn" class="btn ghost" title="Flip Horizontal (X)">Flip H</button>
+            </div>
+            <div class="toolbar" style="gap:8px">
+              <button id="downBtn" class="btn ghost">Send Backward</button>
+              <button id="upBtn" class="btn ghost">Bring Forward</button>
+            </div>
           </div>
         </div>
       </div>
