@@ -50,6 +50,7 @@
     navigator.serviceWorker.register('sw.js');
   }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 </head>
 <body>
@@ -148,6 +149,13 @@
   </div>
 
   <script>
+(async () => {
+  const supabaseClient = window.supabase.createClient('https://example.supabase.co', 'public-anon-key');
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    location.href = "/login.html";
+    return;
+  }
   // ====== State ======
   const assets = [];
   let layers = [];
@@ -267,8 +275,7 @@
   } else {
     updateZoom(); renderLayers(); draw(); pushHistory();
   }
-</script>
-<script>
+
   const themeToggle = document.getElementById('themeToggle');
   const body = document.body;
   const savedTheme = localStorage.getItem('theme');
@@ -324,6 +331,7 @@
   helpOverlay.addEventListener('click', (e) => {
     if (e.target === helpOverlay) helpOverlay.style.display = 'none';
   });
+})();
 </script>
 </body>
 </html>

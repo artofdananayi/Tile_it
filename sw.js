@@ -4,6 +4,7 @@ self.addEventListener("install", e => {
       return cache.addAll([
         "/",
         "/index.html",
+        "/login.html",
         "/manifest.json",
         "/sw.js",
         "/icon-192.png",
