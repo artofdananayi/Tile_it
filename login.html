@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+  <!-- Supabase libraries -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/auth-ui@2"></script>
+  <script src="https://unpkg.com/@supabase/auth-ui@2/dist/umd/supabase-auth-ui.js"></script>
+</head>
+<body>
+  <div id="auth"></div>
+
+  <script>
+    const { createClient } = supabase;
+    const supabaseUrl = 'https://bpwlgiiksovtccsrojko.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk';
+    const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+    const { Auth } = SupabaseAuthUI;
+    Auth({
+      supabaseClient,
+      providers: ['email', 'google', 'github'],
+      redirectTo: '/'
+    }).mount('#auth');
+  </script>
+</body>
+</html>
