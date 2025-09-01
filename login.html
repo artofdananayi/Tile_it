@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login / Sign Up</title>
+    <style>
+      body { font-family: system-ui, sans-serif; display:flex; justify-content:center; padding:40px; }
+      #auth { width:100%; max-width:420px; }
+    </style>
+    <script type="module">
+      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+      import { Auth } from "https://esm.sh/@supabase/auth-ui-js@0.5.2";
+
+      const supabase = createClient(
+        "https://bpwlgiiksovtccsrojko.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk"
+      );
+
+      const container = document.getElementById("auth");
+      Auth({
+        supabaseClient: supabase,
+        providers: ["google", "github"],      // shows buttons if enabled in Supabase
+        redirectTo: location.origin + "/",    // after login go to your app
+        appearance: { theme: "default" },
+      }).mount(container);
+    </script>
+  </head>
+  <body>
+    <div id="auth"></div>
+  </body>
+</html>
