@@ -7,29 +7,41 @@
     <style>
       body { font-family: system-ui, sans-serif; display:flex; justify-content:center; padding:40px; }
       #auth { width:100%; max-width:420px; }
+      #err { color:#b00; font:14px/1.4 system-ui, sans-serif; margin-top:16px; }
     </style>
-    <!-- Supabase + Auth UI, browser friendly -->
+
+    <!-- Browser builds (no npm). Keep these two lines exactly. -->
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="https://unpkg.com/@supabase/auth-ui/dist/umd/index.js"></script>
+    <script src="https://unpkg.com/@supabase/auth-ui-js@0.5.2"></script>
   </head>
 
   <body>
     <div id="auth"></div>
+    <div id="err"></div>
 
     <script>
       const SUPABASE_URL = "https://bpwlgiiksovtccsrojko.supabase.co";
-      const SUPABASE_ANON_KEY = "YOUR_LONG_ANON_KEY_HERE";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk";
 
+      // Create client
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Render login/signup
-      window['supabaseAuthUI'].Auth({
-        supabaseClient: supabase,
-        container: '#auth',
-        providers: ['google', 'github'],
-        redirectTo: location.origin + '/',
-        appearance: { theme: 'default' }
-      });
+      // FIX: grab whichever global the Auth UI exposes
+      const UI = window.supabaseAuthUI || window.SupabaseAuthUI || window.supabaseauthui;
+
+      if (!UI || !UI.Auth) {
+        document.getElementById('err').textContent =
+          "Auth UI script didn’t expose a global. Hard refresh (Ctrl+Shift+R) or try incognito.";
+      } else {
+        UI.Auth({
+          supabaseClient: supabase,
+          container: '#auth',
+          providers: ['google', 'github'],
+          redirectTo: location.origin + '/',
+          appearance: { theme: 'default' }
+        });
+      }
     </script>
   </body>
 </html>
