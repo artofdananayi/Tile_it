@@ -8,25 +8,31 @@
       body { font-family: system-ui, sans-serif; display:flex; justify-content:center; padding:40px; }
       #auth { width:100%; max-width:420px; }
     </style>
-    <script type="module">
-      import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-      import { Auth } from "https://esm.sh/@supabase/auth-ui-js@0.5.2";
 
-      const supabase = createClient(
-        "https://bpwlgiiksovtccsrojko.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk"
-      );
-
-      const container = document.getElementById("auth");
-      Auth({
-        supabaseClient: supabase,
-        providers: ["google", "github"],      // shows buttons if enabled in Supabase
-        redirectTo: location.origin + "/",    // after login go to your app
-        appearance: { theme: "default" },
-      }).mount(container);
-    </script>
+    <!-- ✅ Correct scripts that actually work in the browser -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/auth-ui@0.4.0/dist/umd/index.min.js"></script>
   </head>
+
   <body>
     <div id="auth"></div>
+
+    <script>
+      // Your Supabase details
+      const SUPABASE_URL = "https://bpwlgiiksovtccsrojko.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk";
+
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { Auth } = window.supabaseAuthUI;
+
+      // Render the login / signup form
+      Auth({
+        supabaseClient: supabase,
+        container: '#auth',
+        providers: ['google', 'github'],
+        redirectTo: location.origin + '/',
+        appearance: { theme: 'default' }
+      });
+    </script>
   </body>
 </html>
