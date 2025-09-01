@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login</title>
+<style>
+  html, body, #auth { height: 100%; }
+  body { display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+  <div id="auth"></div>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    import { Auth } from "https://esm.sh/@supabase/auth-ui-js@0.5.2";
+
+    const supabase = createClient("SUPABASE_URL", "SUPABASE_ANON_KEY");
+    const container = document.getElementById("auth");
+    Auth({
+      supabaseClient: supabase,
+      providers: ["google", "github"],
+      redirectTo: location.origin + "/",
+    }).mount(container);
+  </script>
+</body>
+</html>
