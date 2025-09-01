@@ -41,6 +41,9 @@
   .overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.8); display:none; align-items:center; justify-content:center; z-index:1000 }
   .overlay-content{ background:var(--panel); border:1px solid var(--border); color:var(--text); padding:24px; border-radius:12px; max-width:400px; }
   #patternPreview{ width:100%; height:160px; border:1px solid var(--border); border-radius:10px; background-color:var(--bg); background-repeat:repeat; margin-top:8px }
+  .hidden{display:none}
+  .error{color:#c00}
+  .user-info{margin-top:1rem}
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -53,6 +56,39 @@
 
 </head>
 <body>
+  <!-- 1️⃣ Sign‑up form -->
+  <section id="signup">
+    <h2>Sign up</h2>
+    <form id="signup-form">
+      <input type="email" placeholder="email" required /><br/>
+      <input type="password" placeholder="password" required /><br/>
+      <button type="submit">Create account</button>
+    </form>
+    <p class="error" id="signup-error"></p>
+  </section>
+
+  <!-- 2️⃣ Sign‑in form -->
+  <section id="signin">
+    <h2>Sign in</h2>
+    <form id="signin-form">
+      <input type="email" placeholder="email" required /><br/>
+      <input type="password" placeholder="password" required /><br/>
+      <button type="submit">Log in</button>
+    </form>
+    <p class="error" id="signin-error"></p>
+  </section>
+
+  <!-- 3️⃣ Logged‑in UI -->
+  <section id="profile" class="hidden">
+    <h2>Welcome, <span id="user-email"></span></h2>
+    <button id="signout">Log out</button>
+
+    <div class="user-info">
+      <h3>Profile row in Supabase</h3>
+      <pre id="profile-data">loading…</pre>
+    </div>
+  </section>
+
   <div class="wrap">
     <div class="title">
       <h1 style="margin:0">Tile-it</h1>
@@ -324,6 +360,89 @@
   helpOverlay.addEventListener('click', (e) => {
     if (e.target === helpOverlay) helpOverlay.style.display = 'none';
   });
+</script>
+<!-- Supabase JS – pulled from CDN (no build step needed) -->
+<script type="module">
+  import { createClient } from "https://esm.run/@supabase/supabase-js";
+
+  // -----------------------------------------------------------------
+  // 1️⃣ Initialise client – values come from Netlify env vars (exposed as globals)
+  const supabase = createClient(
+   https://bpwlgiiksovtccsrojko.supabase.co,
+  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwd2xnaWlrc292dGNjc3JvamtvIiwicm9sZSI6ImFub24iLCJpYXRpOjE3NTY3MDc1NzIsImV4cCI6MjA3MjI4MzU3Mn0.Vrq9hTdWnGH0E6WQ0HvR_J8k7qax96FqkurJcr7VQkk
+  );
+
+  // -----------------------------------------------------------------
+  // 2️⃣ Helper: show/hide UI sections
+  const $ = (sel) => document.querySelector(sel);
+  const toggleAuth = (loggedIn) => {
+    $("#signup").classList.toggle("hidden", loggedIn);
+    $("#signin").classList.toggle("hidden", loggedIn);
+    $("#profile").classList.toggle("hidden", !loggedIn);
+  };
+
+  // -----------------------------------------------------------------
+  // 3️⃣ Sign‑up flow
+  $("#signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = e.target[0].value;
+    const password = e.target[1].value;
+    const { error, data } = await supabase.auth.signUp({ email, password });
+    if (error) $("#signup-error").textContent = error.message;
+    else {
+      $("#signup-error").textContent = "";
+      alert("Check your email for a confirmation link.");
+    }
+  });
+
+  // -----------------------------------------------------------------
+  // 4️⃣ Sign‑in flow
+  $("#signin-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = e.target[0].value;
+    const password = e.target[1].value;
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) $("#signin-error").textContent = error.message;
+    else {
+      $("#signin-error").textContent = "";
+      await loadProfile();
+    }
+  });
+
+  // -----------------------------------------------------------------
+  // 5️⃣ Load logged‑in profile and show data from Supabase
+  async function loadProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+    $("#user-email").textContent = user.email;
+    toggleAuth(true);
+
+    // Example: pull a row from a table called `profiles`
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)   // assuming `id` = auth UID
+      .single();
+
+    if (error && error.code !== "PGRST116") { // row not found is ok
+      $("#profile-data").textContent = "Error: " + error.message;
+    } else {
+      $("#profile-data").textContent = JSON.stringify(data, null, 2);
+    }
+  }
+
+  // -----------------------------------------------------------------
+  // 6️⃣ Sign‑out
+  $("#signout").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    toggleAuth(false);
+  });
+
+  // -----------------------------------------------------------------
+  // 7️⃣ On page load – check if a session already exists
+  (async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) await loadProfile();
+  })();
 </script>
 </body>
 </html>
