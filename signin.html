@@ -55,27 +55,28 @@
 
         // Configure FirebaseUI (what sign-in methods to show)
         const uiConfig = {
-            callbacks: {
-                signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-                    // User successfully signed in.
-                    // This is where you send them to your main app!
-                    window.location.assign('index.html'); // Redirect to your main app page
-                    return false; // Do not redirect (we'll handle it)
-                },
-                uiShown: function() {
-                    // The widget is rendered.
-                    // Hide the loader if you have one.
-                }
-            },
-            // What sign-in methods you want to offer
-            signInOptions: [
-                firebase.auth.EmailAuthProvider.PROVIDER_ID, // Email/Password
-                firebase.auth.GoogleAuthProvider.PROVIDER_ID // Google Sign-in
-            ],
-            // You can add a Terms of Service URL here if you have one
-            // tosUrl: 'https://www.example.com/terms',
-            // privacyPolicyUrl: 'https://www.example.com/privacy'
-        };
+    callbacks: {
+        signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+            // User successfully signed in.
+            // This is where you send them to your main app!
+            window.location.assign('index.html'); // Redirect to your main app page
+            return false; // Do not redirect (we'll handle it)
+        },
+        uiShown: function() {
+            // The widget is rendered.
+            // Hide the loader if you have one.
+        }
+    },
+    signInFlow: 'popup', // <--- ADD THIS LINE HERE!
+    // What sign-in methods you want to offer
+    signInOptions: [
+        firebase.auth.EmailAuthProvider.PROVIDER_ID, // Email/Password
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID // Google Sign-in
+    ],
+    // You can add a Terms of Service URL here if you have one
+    // tosUrl: 'https://www.example.com/terms',
+    // privacyPolicyUrl: 'https://www.example.com/privacy'
+};
 
         // Start FirebaseUI
         ui.start('#firebaseui-auth-container', uiConfig);
