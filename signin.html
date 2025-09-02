@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tile-it Login</title>
+
+    <!-- Basic Firebase SDKs (already in your index.html, but needed here too) -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
+
+    <!-- FirebaseUI for Auth CDN -->
+    <script src="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.0.0/firebase-ui-auth.css" />
+
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+        }
+        #firebaseui-auth-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="firebaseui-auth-container"></div>
+
+    <script>
+        // Your Firebase project's configuration (GET THIS FROM YOUR FIREBASE CONSOLE!)
+        // Go to Project settings -> Your apps -> find your Web app -> Firebase SDK snippet -> Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCR922x6o3pKKCkVqx7eQk5jjgM3uQRKsk",
+            authDomain: "tile-it-backend.firebaseapp.com",
+            projectId: "tile-it-backend",
+            storageBucket: "tile-it-backend.firebasestorage.app",
+            messagingSenderId: "493336432769",
+            appId: "1:493336432769:web:58bb00829b8a667a1ebd80",
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Initialize the FirebaseUI Widget
+        const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+        // Configure FirebaseUI (what sign-in methods to show)
+        const uiConfig = {
+            callbacks: {
+                signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+                    // User successfully signed in.
+                    // This is where you send them to your main app!
+                    window.location.assign('index.html'); // Redirect to your main app page
+                    return false; // Do not redirect (we'll handle it)
+                },
+                uiShown: function() {
+                    // The widget is rendered.
+                    // Hide the loader if you have one.
+                }
+            },
+            // What sign-in methods you want to offer
+            signInOptions: [
+                firebase.auth.EmailAuthProvider.PROVIDER_ID, // Email/Password
+                firebase.auth.GoogleAuthProvider.PROVIDER_ID // Google Sign-in
+            ],
+            // You can add a Terms of Service URL here if you have one
+            // tosUrl: 'https://www.example.com/terms',
+            // privacyPolicyUrl: 'https://www.example.com/privacy'
+        };
+
+        // Start FirebaseUI
+        ui.start('#firebaseui-auth-container', uiConfig);
+    </script>
+</body>
+</html>
