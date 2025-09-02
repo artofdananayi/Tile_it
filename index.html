@@ -5,7 +5,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth-compat.js"></script>
 
-<script>
+    <script>
         // IMPORTANT: You need your Firebase config here too, just like in signin.html
         const firebaseConfig = {
             apiKey: "AIzaSyCR922x6o3pKKCkVqx7eQk5jjgM3uQRKsk",
@@ -17,15 +17,28 @@
         };
         firebase.initializeApp(firebaseConfig);
 
+        // This flag helps us make sure we only redirect once on initial load
+        let initialAuthCheckDone = false; 
+
         // Check if user is logged in
         firebase.auth().onAuthStateChanged(function(user) {
-            if (!user) {
-                // User is not signed in. Redirect to sign-in page.
-                window.location.assign('signin.html');
+            // Only perform the redirect check the very first time this function runs
+            if (!initialAuthCheckDone) { 
+                initialAuthCheckDone = true; // Mark that we've done the first check
+
+                if (!user) {
+                    // User is definitively NOT signed in after initial check. Redirect.
+                    window.location.assign('signin.html');
+                }
+                // If user IS signed in, this 'if' block is skipped, and they stay on index.html
             }
-            // If user is signed in, they will stay on index.html
+            // For subsequent changes (e.g., if user signs out later), this else path could be used
+            // else {
+            //     // Handle user state changes while already in the app
+            // }
         });
     </script>
+
     <!-- The rest of your index.html head content goes here -->
     <!-- Your main app content here -->
 <meta charset="UTF-8" />
